@@ -29,6 +29,7 @@ import { PdfPreviewModal } from '../components/PdfPreviewModal';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { PaginationBar } from '../components/PaginationBar';
 import { compareStringsNatural, SortableTh, SortConfig, toggleSort } from '../components/SortableTh';
+import { useAppDialog } from '../components/AppDialogProvider';
 
 interface InvoicesPageProps {
   onPayInvoices?: (draft: PaymentPrefillDraft) => void;
@@ -179,6 +180,7 @@ function parseDeliveryNoteRefs(raw: string): string[] {
 }
 
 export const InvoicesPage: React.FC<InvoicesPageProps> = ({ onPayInvoices, onDataChanged }) => {
+  const { showConfirm, showAlert } = useAppDialog();
   const [filterType, setFilterType] = useState<'all' | 'in' | 'out'>('all');
   const [filterPartnerKey, setFilterPartnerKey] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'unpaid' | 'paid'>('all');
@@ -428,12 +430,12 @@ export const InvoicesPage: React.FC<InvoicesPageProps> = ({ onPayInvoices, onDat
     setSelectedIds((prev) => [...prev, inv.id!]);
   };
 
-  const triggerPayForInvoices = (targetInvoices: Invoice[]) => {
+  const triggerPayForInvoices = async (targetInvoices: Invoice[]) => {
     if (!onPayInvoices || targetInvoices.length === 0) return;
     const first = targetInvoices[0];
     const partnerId = first.type === 'out' ? first.cust_id : first.supp_id;
     if (!partnerId) {
-      alert('Invoice ini belum memiliki data Customer / Supplier.');
+      await showAlert('Invoice ini belum memiliki data Customer / Supplier.');
       return;
     }
     // Invoice 'out' (Penjualan/Piutang) -> Payment 'in' (Terima Piutang)
@@ -656,7 +658,7 @@ export const InvoicesPage: React.FC<InvoicesPageProps> = ({ onPayInvoices, onDat
       setForm(recalcTotals(importedDraft, false));
       setModalOpen(true);
     } catch (err: any) {
-      alert('Gagal membaca file transfer JSON: ' + (err?.message || err));
+      await showAlert('Gagal membaca file transfer JSON: ' + (err?.message || err));
     }
   };
 
@@ -692,7 +694,7 @@ export const InvoicesPage: React.FC<InvoicesPageProps> = ({ onPayInvoices, onDat
     e.preventDefault();
     const valid = (form.details || []).filter((d) => Number(d.barang_id) > 0 && Number(d.qty) > 0);
     if (valid.length === 0) {
-      alert('Minimal harus ada 1 item barang yang valid.');
+      await showAlert('Minimal harus ada 1 item barang yang valid.');
       return;
     }
     const syncedForm = syncDeliveryRefsToForm(deliveryNoteRefs, form);
@@ -705,7 +707,12 @@ export const InvoicesPage: React.FC<InvoicesPageProps> = ({ onPayInvoices, onDat
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Hapus dokumen Invoice ini?')) return;
+    const ok = await showConfirm({
+      title: 'Hapus Dokumen Invoice',
+      message: 'Hapus dokumen Invoice ini? Tindakan ini tidak dapat dibatalkan.',
+      confirmText: 'Ya, Hapus',
+    });
+    if (!ok) return;
     await window.api.deleteInvoice(id);
     setSelectedIds((prev) => prev.filter((x) => x !== id));
     await loadData();

@@ -5,8 +5,10 @@ import { generateDocNumber, generateSuratJalanKeluarNumber, todayIso } from '../
 import { PdfPreviewModal } from '../components/PdfPreviewModal';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { compareStringsNatural, SortableTh, SortConfig, toggleSort } from '../components/SortableTh';
+import { useAppDialog } from '../components/AppDialogProvider';
 
 export const DeliveryNotesPage: React.FC = () => {
+  const { showConfirm, showAlert } = useAppDialog();
   const [filterType, setFilterType] = useState<'all' | 'in' | 'out'>('all');
   const [sortConfig, setSortConfig] = useState<SortConfig<'no' | 'tgl'> | null>({
     key: 'tgl',
@@ -166,7 +168,7 @@ export const DeliveryNotesPage: React.FC = () => {
     e.preventDefault();
     const valid = (form.details || []).filter((d) => Number(d.barang_id) > 0 && Number(d.qty_sent) > 0);
     if (valid.length === 0) {
-      alert('Minimal harus ada 1 barang dengan jumlah kirim lebih dari 0.');
+      await showAlert('Minimal harus ada 1 barang dengan jumlah kirim lebih dari 0.');
       return;
     }
     const payload: DeliveryNote = { ...form, details: valid };
@@ -177,7 +179,12 @@ export const DeliveryNotesPage: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Hapus Surat Jalan ini? Stok barang & riwayat mutasi akan otomatis di-rollback.')) return;
+    const ok = await showConfirm({
+      title: 'Hapus Surat Jalan',
+      message: 'Hapus Surat Jalan ini? Stok barang & riwayat mutasi akan otomatis di-rollback.',
+      confirmText: 'Ya, Hapus',
+    });
+    if (!ok) return;
     await window.api.deleteDeliveryNote(id);
     loadData();
   };
@@ -185,7 +192,7 @@ export const DeliveryNotesPage: React.FC = () => {
   const handleExportTransfer = async (id: number) => {
     const res = await window.api.exportTransferJson('DELIVERY_NOTE', id);
     if (res.saved) {
-      alert('File transfer Surat Jalan (.json) berhasil disimpan ke:\n' + res.filePath);
+      await showAlert('File transfer Surat Jalan (.json) berhasil disimpan ke:\n' + res.filePath);
     }
   };
 

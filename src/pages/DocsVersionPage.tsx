@@ -12,8 +12,12 @@ import {
   FileSpreadsheet,
   HardDrive,
   AlertTriangle,
+  RefreshCw,
+  DownloadCloud,
+  WifiOff,
 } from 'lucide-react';
 import { APP_NAME, APP_RELEASES, APP_VERSION, ReleaseNoteItem } from '../data/changelog';
+import { UpdateCheckResult } from '../../shared/types';
 
 const BADGE_STYLES: Record<
   ReleaseNoteItem['type'],
@@ -39,9 +43,65 @@ const BADGE_STYLES: Record<
 export const DocsVersionPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'guide' | 'changelog'>('guide');
   const [dbPath, setDbPath] = useState<string>('');
+  const [installedVersion, setInstalledVersion] = useState<string>(APP_VERSION);
+  const [checkingUpdate, setCheckingUpdate] = useState<boolean>(false);
+  const [applyingUpdate, setApplyingUpdate] = useState<boolean>(false);
+  const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(null);
+  const [updateStatusMsg, setUpdateStatusMsg] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+
+  const handleCheckUpdate = async () => {
+    if (!window.api?.checkForOtaUpdate) return;
+    setCheckingUpdate(true);
+    setUpdateStatusMsg(null);
+    try {
+      const res = await window.api.checkForOtaUpdate();
+      setUpdateInfo(res);
+      if (res.offline || res.error) {
+        setUpdateStatusMsg({ type: 'info', text: res.error || 'Tidak dapat memeriksa pembaruan.' });
+      } else if (res.hasUpdate) {
+        setUpdateStatusMsg({
+          type: 'success',
+          text: `Pembaruan v${res.latestVersion} tersedia! Klik tombol "Update & Restart Sekarang" untuk memasang.`,
+        });
+      } else {
+        setUpdateStatusMsg({
+          type: 'info',
+          text: `Aplikasi sudah menggunakan versi terbaru (v${res.currentVersion}).`,
+        });
+      }
+    } catch (err: any) {
+      setUpdateStatusMsg({ type: 'error', text: err?.message || 'Gagal memeriksa pembaruan.' });
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
+  const handleApplyUpdate = async () => {
+    if (!updateInfo?.hasUpdate || !updateInfo.bundleUrl || !window.api?.applyOtaUpdate) return;
+    setApplyingUpdate(true);
+    setUpdateStatusMsg({ type: 'info', text: 'Mengunduh & memasang pembaruan, mohon tunggu...' });
+    try {
+      const res = await window.api.applyOtaUpdate({
+        version: updateInfo.latestVersion,
+        bundleUrl: updateInfo.bundleUrl,
+        sha256: updateInfo.sha256 || '',
+      });
+      if (!res.success) {
+        setUpdateStatusMsg({ type: 'error', text: res.message });
+        setApplyingUpdate(false);
+      } else {
+        setUpdateStatusMsg({ type: 'success', text: res.message });
+      }
+    } catch (err: any) {
+      setUpdateStatusMsg({ type: 'error', text: err?.message || 'Gagal menerapkan pembaruan.' });
+      setApplyingUpdate(false);
+    }
+  };
 
   useEffect(() => {
     window.api?.getDbPath?.().then((p) => setDbPath(p)).catch(() => {});
+    window.api?.getCurrentAppVersion?.().then((v) => v && setInstalledVersion(v)).catch(() => {});
+    handleCheckUpdate();
   }, []);
 
   const currentRelease = APP_RELEASES.find((r) => r.isCurrent) || APP_RELEASES[0];
@@ -54,7 +114,7 @@ export const DocsVersionPage: React.FC = () => {
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2.5">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold tracking-wide text-white">
-                {APP_NAME} v{APP_VERSION}
+                {APP_NAME} v{installedVersion}
               </span>
               <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
                 <ShieldCheck className="h-3.5 w-3.5" />
@@ -67,34 +127,108 @@ export const DocsVersionPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Tab Switcher */}
-          <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1">
+          {/* Tab Switcher & Update Trigger */}
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
-              onClick={() => setActiveTab('guide')}
-              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-                activeTab === 'guide'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              onClick={handleCheckUpdate}
+              disabled={checkingUpdate || applyingUpdate}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:opacity-50"
             >
-              <BookOpen className="h-4 w-4" />
-              Tutorial Penggunaan
+              <RefreshCw className={`h-4 w-4 ${checkingUpdate ? 'animate-spin text-blue-600' : 'text-slate-600'}`} />
+              {checkingUpdate ? 'Memeriksa...' : 'Cek Pembaruan'}
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('changelog')}
-              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-                activeTab === 'changelog'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <GitCommit className="h-4 w-4" />
-              Log Versi ({APP_RELEASES.length})
-            </button>
+
+            {updateInfo?.hasUpdate && (
+              <button
+                type="button"
+                onClick={handleApplyUpdate}
+                disabled={applyingUpdate}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-700 disabled:opacity-50"
+              >
+                <DownloadCloud className="h-4 w-4" />
+                {applyingUpdate ? 'Memasang Update...' : `Update & Restart (v${updateInfo.latestVersion})`}
+              </button>
+            )}
+
+            <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab('guide')}
+                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+                  activeTab === 'guide'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <BookOpen className="h-4 w-4" />
+                Tutorial Penggunaan
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('changelog')}
+                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+                  activeTab === 'changelog'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <GitCommit className="h-4 w-4" />
+                Log Versi ({APP_RELEASES.length})
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* OTA Update Status Banner */}
+        {(updateInfo?.hasUpdate || updateStatusMsg) && (
+          <div
+            className={`mt-4 flex flex-col justify-between gap-3 rounded-xl border p-4 sm:flex-row sm:items-center ${
+              updateInfo?.hasUpdate
+                ? 'border-emerald-300 bg-emerald-50 text-emerald-950'
+                : updateStatusMsg?.type === 'error'
+                ? 'border-rose-200 bg-rose-50 text-rose-900'
+                : 'border-slate-200 bg-slate-50 text-slate-700'
+            }`}
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-sm font-bold">
+                {updateInfo?.offline ? (
+                  <WifiOff className="h-4 w-4 text-slate-500" />
+                ) : updateInfo?.hasUpdate ? (
+                  <Sparkles className="h-4 w-4 text-emerald-600" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                )}
+                <span>
+                  {updateInfo?.hasUpdate
+                    ? `Versi Baru Tersedia: v${updateInfo.latestVersion} (Rilis ${updateInfo.releaseDate || '-'})`
+                    : updateStatusMsg?.text}
+                </span>
+              </div>
+              {updateInfo?.hasUpdate && updateInfo.notes && (
+                <p className="text-xs leading-relaxed text-emerald-900">
+                  <strong>Catatan Perubahan:</strong> {updateInfo.notes}
+                </p>
+              )}
+              {updateInfo?.hasUpdate && updateStatusMsg && applyingUpdate && (
+                <p className="text-xs font-semibold text-emerald-700">{updateStatusMsg.text}</p>
+              )}
+            </div>
+
+            {updateInfo?.hasUpdate && (
+              <button
+                type="button"
+                onClick={handleApplyUpdate}
+                disabled={applyingUpdate}
+                className="inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+              >
+                <DownloadCloud className="h-4 w-4" />
+                {applyingUpdate ? 'Memproses...' : 'Update & Restart Sekarang'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {activeTab === 'guide' ? (

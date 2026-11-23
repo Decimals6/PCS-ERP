@@ -11,6 +11,7 @@ import {
 import { formatRupiah, generateDocNumber, todayIso } from '../utils/format';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { PaginationBar } from '../components/PaginationBar';
+import { useAppDialog } from '../components/AppDialogProvider';
 
 interface PaymentsPageProps {
   onDataChanged?: () => void;
@@ -23,6 +24,7 @@ export const PaymentsPage: React.FC<PaymentsPageProps> = ({
   prefillDraft,
   onPrefillConsumed,
 }) => {
+  const { showConfirm, showAlert } = useAppDialog();
   const [filterType, setFilterType] = useState<'all' | 'in' | 'out'>('all');
   const [filterPartnerKey, setFilterPartnerKey] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -265,11 +267,11 @@ export const PaymentsPage: React.FC<PaymentsPageProps> = ({
     setForm({ ...form, deduction, received });
   };
 
-  const addManualAllocationRow = () => {
+  const addManualAllocationRow = async () => {
     const usedIds = new Set((form.details || []).map((d) => d.invoice_id));
     const nextInv = partnerInvoices.find((inv) => inv.id && !usedIds.has(inv.id)) || partnerInvoices[0];
     if (!nextInv) {
-      alert('Pilih Customer / Supplier yang memiliki invoice belum lunas terlebih dahulu.');
+      await showAlert('Pilih Customer / Supplier yang memiliki invoice belum lunas terlebih dahulu.');
       return;
     }
     const grand = Number(nextInv.total || 0) + Number(nextInv.ongkir || 0);
@@ -331,7 +333,7 @@ export const PaymentsPage: React.FC<PaymentsPageProps> = ({
     e.preventDefault();
     const validDetails = (form.details || []).filter((d) => Number(d.invoice_id) > 0 && Number(d.subtotal) > 0);
     if (validDetails.length === 0) {
-      alert('Minimal harus ada 1 alokasi pelunasan invoice dengan nominal lebih dari 0.');
+      await showAlert('Minimal harus ada 1 alokasi pelunasan invoice dengan nominal lebih dari 0.');
       return;
     }
     const sumAllocated = validDetails.reduce((s, d) => s + Number(d.subtotal || 0), 0);
@@ -353,7 +355,12 @@ export const PaymentsPage: React.FC<PaymentsPageProps> = ({
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Hapus bukti pelunasan ini? Saldo terbayar pada invoice terkait akan dikembalikan otomatis.')) return;
+    const ok = await showConfirm({
+      title: 'Hapus Bukti Pelunasan',
+      message: 'Hapus bukti pelunasan ini? Saldo terbayar pada invoice terkait akan dikembalikan otomatis.',
+      confirmText: 'Ya, Hapus',
+    });
+    if (!ok) return;
     await window.api.deletePayment(id);
     await loadData();
     onDataChanged?.();

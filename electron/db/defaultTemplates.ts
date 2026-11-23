@@ -575,5 +575,84 @@ table.items tr.spacer-row td { height: 42px; }
   <div class="sig-col">Penerima,</div>
   <div class="sig-col">Hormat kami,</div>
 </div>`
+  },
+  {
+    doc_type: 'SAMPLE',
+    name: 'Tanda Terima Sampel (PDF / A4)',
+    css_content: `* { box-sizing: border-box; margin: 0; padding: 0; }
+@page { size: A4 portrait; margin: 16mm 18mm; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #000000; padding: 0; line-height: 1.5; }
+.company-block { margin-bottom: 24px; }
+.company-block .company-name { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+.company-block .company-addr { white-space: pre-line; font-size: 11.5px; line-height: 1.45; }
+.doc-title { text-align: center; font-size: 15px; font-weight: 700; letter-spacing: 0.6px; margin: 10px 0 28px; text-transform: uppercase; }
+.form-table { width: 100%; border-collapse: collapse; margin-bottom: 34px; }
+.form-table td { vertical-align: top; padding: 8px 0; font-size: 12px; }
+.form-table td.lbl { width: 175px; font-weight: 700; letter-spacing: 0.2px; text-transform: uppercase; }
+.form-table td.sep { width: 18px; text-align: center; font-weight: 700; }
+.line-val { border-bottom: 1px solid #000000; min-height: 22px; padding: 0 4px 2px 4px; }
+.line-sub { border-bottom: 1px solid #000000; height: 22px; }
+.date-row { text-align: right; margin-top: 12px; margin-bottom: 14px; font-size: 12px; }
+.sig-grid { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 36px; }
+.sig-col { width: 220px; text-align: center; }
+.sig-title { font-weight: 700; text-transform: uppercase; }
+.sig-space { height: 76px; }
+.sig-penerima { display: flex; justify-content: space-between; width: 150px; margin: 0 auto; font-weight: 700; }
+.sig-company { font-weight: 700; text-decoration: underline; text-transform: uppercase; }`,
+    html_content: `<div class="company-block">
+  <div class="company-name">{{company_name_title}}</div>
+  <div class="company-addr">{{company_address}}</div>
+</div>
+
+<div class="doc-title">TANDA TERIMA SAMPEL</div>
+
+<table class="form-table">
+  <tr>
+    <td class="lbl">TELAH TERIMA DARI</td>
+    <td class="sep">:</td>
+    <td>
+      <div class="line-val">{{company_name_title}}</div>
+      <div class="line-sub"></div>
+    </td>
+  </tr>
+  <tr>
+    <td class="lbl">BERUPA</td>
+    <td class="sep">:</td>
+    <td>
+      {{sample_items_lines}}
+    </td>
+  </tr>
+  <tr>
+    <td class="lbl">DI TERIMA OLEH</td>
+    <td class="sep">:</td>
+    <td>
+      <div class="line-val">{{penerima_nama}}</div>
+      <div class="line-sub"></div>
+    </td>
+  </tr>
+  <tr>
+    <td class="lbl">KETERANGAN</td>
+    <td class="sep">:</td>
+    <td>
+      <div class="line-val">{{keterangan}}</div>
+      <div class="line-sub"></div>
+    </td>
+  </tr>
+</table>
+
+<div class="date-row">{{company_city_upper}}, {{tgl_long}}</div>
+
+<div class="sig-grid">
+  <div class="sig-col">
+    <div class="sig-title">PENERIMA</div>
+    <div class="sig-space"></div>
+    <div class="sig-penerima"><span>(</span><span>)</span></div>
+  </div>
+  <div class="sig-col">
+    <div class="sig-title">HORMAT KAMI</div>
+    <div class="sig-space"></div>
+    <div class="sig-company">{{company_name}}</div>
+  </div>
+</div>`
   }
 ];

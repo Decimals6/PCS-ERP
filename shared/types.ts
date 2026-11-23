@@ -4,7 +4,7 @@ export type InvoiceType = 'in' | 'out'; // 'in' = Hutang (Supplier), 'out' = Piu
 export type InvoiceStatus = 'Belum Lunas' | 'Cicil' | 'Lunas';
 export type PaymentType = 'in' | 'out'; // 'in' = Terima Pelunasan Piutang, 'out' = Bayar Hutang
 export type MutasiType = 'in' | 'out';
-export type DocType = 'PO' | 'SO' | 'SJ' | 'SJ_DOT' | 'INVOICE' | 'INVOICE_DOT';
+export type DocType = 'PO' | 'SO' | 'SJ' | 'SJ_DOT' | 'INVOICE' | 'INVOICE_DOT' | 'SAMPLE';
 export type AppMode = 'mode_1_gudang' | 'mode_2_finance' | 'all';
 
 // --- MASTER DATA ---
@@ -203,11 +203,74 @@ export interface MutasiBarang {
   tgl: string;
   source: string;
   delivery_note_id: number | null;
+  sample_id?: number | null;
   keterangan: string;
   // Joined fields
   barang_kode?: string;
   barang_nama?: string;
   barang_satuan?: string;
+}
+
+export interface MutasiBarangInput {
+  barang_id: number;
+  type: MutasiType;
+  qty: number;
+  tgl: string;
+  source?: string;
+  keterangan?: string;
+}
+
+// --- TRANSAKSI: SAMPLES ---
+export interface SampleBarang {
+  id?: number;
+  id_sample?: number;
+  id_barangs: number;
+  qty: number;
+  satuan?: string;
+  // Joined fields
+  barang_kode?: string;
+  barang_nama?: string;
+  barang_satuan?: string;
+  part_number?: string;
+}
+
+export interface Sample {
+  id?: number;
+  no: string;
+  tgl: string;
+  id_customer: number | null;
+  penerima_nama?: string;
+  keterangan: string;
+  // Joined fields
+  customer_nama?: string;
+  customer_alamat?: string;
+  details?: SampleBarang[];
+}
+
+// --- OTA AUTO-UPDATE ---
+export interface OtaManifest {
+  version: string;
+  releaseDate: string;
+  notes: string;
+  bundleUrl: string;
+  sha256: string;
+}
+
+export interface UpdateCheckResult {
+  hasUpdate: boolean;
+  currentVersion: string;
+  latestVersion: string;
+  releaseDate?: string;
+  notes?: string;
+  bundleUrl?: string;
+  sha256?: string;
+  offline?: boolean;
+  error?: string;
+}
+
+export interface UpdateApplyResult {
+  success: boolean;
+  message: string;
 }
 
 // --- TEMPLATE & SETTINGS ---
@@ -257,6 +320,7 @@ export type ExportDatasetKey =
   | 'so'
   | 'sj_in'
   | 'sj_out'
+  | 'sample'
   | 'invoice_in'
   | 'invoice_out'
   | 'payment_in'
@@ -278,6 +342,7 @@ export interface HumanBackupPreviewCounts {
   so: number;
   sj_in: number;
   sj_out: number;
+  sample: number;
   invoice_in: number;
   invoice_out: number;
   payment_in: number;

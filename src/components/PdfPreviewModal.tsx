@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Download, Printer, FileText } from 'lucide-react';
 import { DocType } from '../../shared/types';
+import { useAppDialog } from './AppDialogProvider';
 
 interface PdfPreviewModalProps {
   docType: DocType;
@@ -9,6 +10,7 @@ interface PdfPreviewModalProps {
 }
 
 export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({ docType, docId, onClose }) => {
+  const { showAlert } = useAppDialog();
   const isInvoiceMode = docType === 'INVOICE' || docType === 'INVOICE_DOT';
   const isSjMode = docType === 'SJ' || docType === 'SJ_DOT';
   const hasFormatSwitch = isInvoiceMode || isSjMode;
@@ -35,24 +37,24 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({ docType, docId
           setLoading(false);
         }
       })
-      .catch((err) => {
-        alert('Gagal memuat pratinjau dokumen: ' + err.message);
+      .catch(async (err) => {
+        await showAlert('Gagal memuat pratinjau dokumen: ' + err.message);
         onClose();
       });
     return () => {
       active = false;
     };
-  }, [activeDocType, docId, onClose]);
+  }, [activeDocType, docId, onClose, showAlert]);
 
   const handleSavePdf = async () => {
     setSaving(true);
     try {
       const res = await window.api.exportDocumentToPdf(activeDocType, docId);
       if (res.saved) {
-        alert('PDF berhasil disimpan ke: ' + res.filePath);
+        await showAlert('PDF berhasil disimpan ke: ' + res.filePath);
       }
     } catch (err: any) {
-      alert('Gagal menyimpan PDF: ' + (err?.message || err));
+      await showAlert('Gagal menyimpan PDF: ' + (err?.message || err));
     } finally {
       setSaving(false);
     }
@@ -65,7 +67,7 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({ docType, docId
     try {
       await window.api.printDocumentDirect(activeDocType, docId);
     } catch (err: any) {
-      alert('Gagal mencetak dokumen: ' + (err?.message || err));
+      await showAlert('Gagal mencetak dokumen: ' + (err?.message || err));
     } finally {
       setPrinting(false);
     }

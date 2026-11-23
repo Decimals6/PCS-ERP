@@ -7,8 +7,10 @@ import {
   DocType,
   HumanBackupRequest,
   Invoice,
+  MutasiBarangInput,
   Order,
   Payment,
+  Sample,
   Supplier,
   TransferDocumentPayload,
 } from '../shared/types';
@@ -54,6 +56,16 @@ const api = {
 
   // Mutasi Barang
   listMutasiBarang: (barangId?: number) => ipcRenderer.invoke('mutasi:list', barangId),
+  createManualMutasi: (data: MutasiBarangInput) => ipcRenderer.invoke('mutasi:createManual', data),
+  updateManualMutasi: (id: number, data: MutasiBarangInput) => ipcRenderer.invoke('mutasi:updateManual', id, data),
+  deleteManualMutasi: (id: number) => ipcRenderer.invoke('mutasi:deleteManual', id),
+
+  // Samples
+  listSamples: () => ipcRenderer.invoke('sample:list'),
+  getSampleById: (id: number) => ipcRenderer.invoke('sample:getById', id),
+  createSample: (data: Sample) => ipcRenderer.invoke('sample:create', data),
+  updateSample: (id: number, data: Sample) => ipcRenderer.invoke('sample:update', id, data),
+  deleteSample: (id: number) => ipcRenderer.invoke('sample:delete', id),
 
   // Invoices
   listInvoices: (type?: 'in' | 'out') => ipcRenderer.invoke('invoice:list', type),
@@ -92,6 +104,12 @@ const api = {
   previewHumanBackupCounts: (startDate?: string, endDate?: string) =>
     ipcRenderer.invoke('backup:previewCounts', startDate, endDate),
   exportHumanBackup: (req: HumanBackupRequest) => ipcRenderer.invoke('backup:exportHuman', req),
+
+  // OTA Auto-Update
+  getCurrentAppVersion: () => ipcRenderer.invoke('updater:version') as Promise<string>,
+  checkForOtaUpdate: () => ipcRenderer.invoke('updater:check'),
+  applyOtaUpdate: (manifest: { version: string; bundleUrl: string; sha256: string }) =>
+    ipcRenderer.invoke('updater:apply', manifest),
 };
 
 contextBridge.exposeInMainWorld('api', api);

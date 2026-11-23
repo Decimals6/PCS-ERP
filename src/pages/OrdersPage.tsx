@@ -5,8 +5,10 @@ import { formatRupiah, generateDocNumber, generateSalesOrderNumber, todayIso } f
 import { PdfPreviewModal } from '../components/PdfPreviewModal';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { compareStringsNatural, SortableTh, SortConfig, toggleSort } from '../components/SortableTh';
+import { useAppDialog } from '../components/AppDialogProvider';
 
 export const OrdersPage: React.FC = () => {
+  const { showConfirm, showAlert } = useAppDialog();
   const [filterType, setFilterType] = useState<'all' | 'in' | 'out'>('all');
   const [sortConfig, setSortConfig] = useState<SortConfig<'no' | 'tgl' | 'dpp' | 'total'> | null>({
     key: 'tgl',
@@ -164,7 +166,7 @@ export const OrdersPage: React.FC = () => {
     e.preventDefault();
     const validDetails = (form.details || []).filter((d) => Number(d.barang_id) > 0 && Number(d.qty) > 0);
     if (validDetails.length === 0) {
-      alert('Minimal harus ada 1 item barang yang valid.');
+      await showAlert('Minimal harus ada 1 item barang yang valid.');
       return;
     }
     const payload = recalcTotals({ ...form, details: validDetails });
@@ -175,7 +177,12 @@ export const OrdersPage: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Hapus dokumen Order ini?')) return;
+    const ok = await showConfirm({
+      title: 'Hapus Dokumen Order',
+      message: 'Hapus dokumen Order ini? Tindakan ini tidak dapat dibatalkan.',
+      confirmText: 'Ya, Hapus',
+    });
+    if (!ok) return;
     await window.api.deleteOrder(id);
     loadData();
   };
@@ -183,7 +190,7 @@ export const OrdersPage: React.FC = () => {
   const handleExportTransfer = async (id: number) => {
     const res = await window.api.exportTransferJson('ORDER', id);
     if (res.saved) {
-      alert('File transfer JSON berhasil disimpan ke:\n' + res.filePath + '\n\nKirimkan file ini ke Divisi Finance untuk di-import menjadi Invoice.');
+      await showAlert('File transfer JSON berhasil disimpan ke:\n' + res.filePath + '\n\nKirimkan file ini ke Divisi Finance untuk di-import menjadi Invoice.');
     }
   };
 

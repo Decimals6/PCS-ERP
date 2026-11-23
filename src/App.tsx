@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { AppMode, AppSettings, PaymentPrefillDraft } from '../shared/types';
+import { Sparkles, X } from 'lucide-react';
+import { AppMode, AppSettings, PaymentPrefillDraft, UpdateCheckResult } from '../shared/types';
 import { NavPage, Sidebar } from './components/Sidebar';
 import { DashboardPage } from './pages/DashboardPage';
 import { MasterDataPage } from './pages/MasterDataPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { DeliveryNotesPage } from './pages/DeliveryNotesPage';
 import { MutasiBarangPage } from './pages/MutasiBarangPage';
+import { SamplesPage } from './pages/SamplesPage';
 import { InvoicesPage } from './pages/InvoicesPage';
 import { PaymentsPage } from './pages/PaymentsPage';
 import { BackupExportPage } from './pages/BackupExportPage';
@@ -29,6 +31,8 @@ export default function App() {
     default_ppn: '11',
   });
   const [loading, setLoading] = useState(true);
+  const [availableUpdate, setAvailableUpdate] = useState<UpdateCheckResult | null>(null);
+  const [dismissUpdateBanner, setDismissUpdateBanner] = useState(false);
 
   useEffect(() => {
     window.api
@@ -37,6 +41,12 @@ export default function App() {
         setSettings(cfg);
       })
       .finally(() => setLoading(false));
+
+    window.api?.checkForOtaUpdate?.().then((res) => {
+      if (res?.hasUpdate) {
+        setAvailableUpdate(res);
+      }
+    }).catch(() => {});
   }, []);
 
   const handleQuickSwitchMode = async (mode: AppMode) => {
@@ -46,7 +56,7 @@ export default function App() {
       setActivePage('dashboard');
     } else if (
       mode === 'mode_2_finance' &&
-      (activePage === 'orders' || activePage === 'delivery_notes' || activePage === 'mutasi')
+      (activePage === 'orders' || activePage === 'delivery_notes' || activePage === 'samples' || activePage === 'mutasi')
     ) {
       setActivePage('dashboard');
     }
@@ -72,12 +82,41 @@ export default function App() {
 
       <main className="flex-1 overflow-y-auto p-6 lg:p-8">
         <div className="mx-auto max-w-7xl">
+          {availableUpdate?.hasUpdate && !dismissUpdateBanner && activePage !== 'docs' && (
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-emerald-950 shadow-sm">
+              <div className="flex items-center gap-2.5 text-sm">
+                <Sparkles className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+                <span>
+                  Pembaruan aplikasi <strong>v{availableUpdate.latestVersion}</strong> tersedia!
+                  {availableUpdate.notes ? ` â€” ${availableUpdate.notes}` : ''}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActivePage('docs')}
+                  className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
+                >
+                  Buka Halaman Update
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDismissUpdateBanner(true)}
+                  className="rounded-lg p-1 text-emerald-700 hover:bg-emerald-100"
+                  title="Tutup notifikasi"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
           {activePage === 'dashboard' && (
             <DashboardPage key={`dash-${dataRevision}`} appMode={settings.app_mode} onNavigate={setActivePage} />
           )}
           {activePage === 'master' && <MasterDataPage key={`master-${dataRevision}`} />}
           {activePage === 'orders' && <OrdersPage key={`orders-${dataRevision}`} />}
           {activePage === 'delivery_notes' && <DeliveryNotesPage key={`dn-${dataRevision}`} />}
+          {activePage === 'samples' && <SamplesPage key={`samples-${dataRevision}`} />}
           {activePage === 'mutasi' && <MutasiBarangPage key={`mutasi-${dataRevision}`} />}
           {activePage === 'invoices' && (
             <InvoicesPage

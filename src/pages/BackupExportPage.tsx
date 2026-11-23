@@ -17,6 +17,7 @@ import {
   HumanBackupPreviewCounts,
   HumanBackupResult,
 } from '../../shared/types';
+import { useAppDialog } from '../components/AppDialogProvider';
 
 interface BackupExportPageProps {
   appMode: AppMode;
@@ -56,6 +57,13 @@ const DATASET_OPTIONS: DatasetOption[] = [
     key: 'sj_out',
     label: 'Surat Jalan Keluar (Pengiriman)',
     description: 'SJ pengiriman barang ke Customer beserta kode & nama barang',
+    group: 'gudang',
+    hasDateFilter: true,
+  },
+  {
+    key: 'sample',
+    label: 'Tanda Terima Sampel (SP)',
+    description: 'Dokumen pengeluaran barang sample ke Customer beserta rincian item',
     group: 'gudang',
     hasDateFilter: true,
   },
@@ -125,6 +133,7 @@ function formatDateLocal(d: Date): string {
 }
 
 export const BackupExportPage: React.FC<BackupExportPageProps> = ({ appMode }) => {
+  const { showConfirm, showAlert } = useAppDialog();
   const [startDate, setStartDate] = useState<string>(() => {
     const now = new Date();
     return formatDateLocal(new Date(now.getFullYear(), now.getMonth(), 1));
@@ -196,7 +205,7 @@ export const BackupExportPage: React.FC<BackupExportPageProps> = ({ appMode }) =
 
   const handleExportHuman = async () => {
     if (selectedKeys.length === 0) {
-      alert('Pilih minimal satu jenis data yang ingin di-backup.');
+      await showAlert('Pilih minimal satu jenis data yang ingin di-backup.');
       return;
     }
     setExporting(true);
@@ -211,7 +220,7 @@ export const BackupExportPage: React.FC<BackupExportPageProps> = ({ appMode }) =
         setLastResult(res);
       }
     } catch (err: any) {
-      alert('Gagal melakukan export backup: ' + (err?.message || String(err)));
+      await showAlert('Gagal melakukan export backup: ' + (err?.message || String(err)));
     } finally {
       setExporting(false);
     }
@@ -220,21 +229,24 @@ export const BackupExportPage: React.FC<BackupExportPageProps> = ({ appMode }) =
   const handleBackupDb = async () => {
     const res = await window.api.backupDatabase();
     if (res.saved) {
-      alert('Backup database SQLite (.db) berhasil disimpan ke:\n' + res.filePath);
+      await showAlert('Backup database SQLite (.db) berhasil disimpan ke:\n' + res.filePath);
     }
   };
 
   const handleRestoreDb = async () => {
-    if (
-      !confirm(
-        'Restore database akan menimpa seluruh data saat ini dengan file backup .db yang dipilih. Lanjutkan?'
-      )
-    ) {
+    const ok = await showConfirm({
+      title: 'Restore Database Sistem',
+      message:
+        'Restore database akan menimpa seluruh data saat ini dengan file backup .db yang dipilih. Lanjutkan?',
+      confirmText: 'Ya, Restore Database',
+      variant: 'warning',
+    });
+    if (!ok) {
       return;
     }
     const res = await window.api.restoreDatabase();
     if (res.restored) {
-      alert('Database berhasil di-restore! Aplikasi akan memuat ulang data.');
+      await showAlert('Database berhasil di-restore! Aplikasi akan memuat ulang data.');
       window.location.reload();
     }
   };

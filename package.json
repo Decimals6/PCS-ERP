@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "concurrently -k \"vite\" \"wait-on http://localhost:5173 && tsc -p tsconfig.electron.json && electron .\"",
     "build": "tsc -p tsconfig.json && vite build && tsc -p tsconfig.electron.json",
-    "dist:win": "npm run build && electron-builder --win nsis"
+    "dist:win": "npm run build && electron-builder --win nsis",
+    "publish:ota": "node scripts/publish-ota.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -32,6 +33,7 @@
   "build": {
     "appId": "com.erplite.offline",
     "productName": "PCS-ERP",
+    "asar": false,
     "directories": {
       "output": "release"
     },

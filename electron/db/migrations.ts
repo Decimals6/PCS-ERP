@@ -1,7 +1,7 @@
 import { getDb, queryOne, queryAll, execute, saveDatabase } from './database';
 import { DEFAULT_PDF_TEMPLATES } from './defaultTemplates';
 
-const LATEST_SCHEMA_VERSION = 6;
+const LATEST_SCHEMA_VERSION = 7;
 
 function addColumnIfNotExists(table: string, column: string, definition: string): void {
   const cols = queryAll<{ name: string }>(`PRAGMA table_info(${table})`);
@@ -39,6 +39,10 @@ export function runMigrations(): void {
 
   if (currentVersion < 6) {
     migrateToV6();
+  }
+
+  if (currentVersion < 7) {
+    migrateToV7();
   }
 
   if (currentVersion < LATEST_SCHEMA_VERSION) {
@@ -351,6 +355,43 @@ function migrateToV6(): void {
       [poSeed.name, poSeed.html_content, poSeed.css_content, now, 'PO'],
       false
     );
+  }
+}
+
+function migrateToV7(): void {
+  const db = getDb();
+  db.run(`
+    CREATE TABLE IF NOT EXISTS samples (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      no TEXT NOT NULL DEFAULT '',
+      tgl TEXT NOT NULL DEFAULT '',
+      id_customer INTEGER,
+      penerima_nama TEXT NOT NULL DEFAULT '',
+      keterangan TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE TABLE IF NOT EXISTS sample_barangs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_sample INTEGER NOT NULL,
+      id_barangs INTEGER NOT NULL,
+      qty REAL NOT NULL DEFAULT 0,
+      satuan TEXT NOT NULL DEFAULT 'PCS'
+    );
+  `);
+
+  addColumnIfNotExists('mutasi_barang', 'sample_id', 'INTEGER DEFAULT NULL');
+
+  const now = new Date().toISOString();
+  const sampleSeed = DEFAULT_PDF_TEMPLATES.find((t) => t.doc_type === 'SAMPLE');
+  if (sampleSeed) {
+    const existing = queryOne('SELECT id FROM pdf_templates WHERE doc_type = ?', ['SAMPLE']);
+    if (!existing) {
+      execute(
+        'INSERT INTO pdf_templates (doc_type, name, html_content, css_content, updated_at) VALUES (?, ?, ?, ?, ?)',
+        [sampleSeed.doc_type, sampleSeed.name, sampleSeed.html_content, sampleSeed.css_content, now],
+        false
+      );
+    }
   }
 }
 

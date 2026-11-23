@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Save, RotateCcw, Database, Upload, Download, Eye, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { AppMode, AppSettings, DocType, PdfTemplate } from '../../shared/types';
+import { useAppDialog } from '../components/AppDialogProvider';
 
 interface SettingsTemplatesPageProps {
   settings: AppSettings;
@@ -11,6 +12,7 @@ export const SettingsTemplatesPage: React.FC<SettingsTemplatesPageProps> = ({
   settings,
   onSettingsSaved,
 }) => {
+  const { showConfirm, showAlert } = useAppDialog();
   const [formSettings, setFormSettings] = useState<AppSettings>(settings);
   const [templates, setTemplates] = useState<PdfTemplate[]>([]);
   const [selectedDocType, setSelectedDocType] = useState<DocType>('INVOICE');
@@ -53,7 +55,7 @@ export const SettingsTemplatesPage: React.FC<SettingsTemplatesPageProps> = ({
     e.preventDefault();
     const updated = await window.api.updateAppSettings(formSettings);
     onSettingsSaved(updated);
-    alert('Pengaturan perusahaan & mode aplikasi berhasil disimpan!');
+    await showAlert('Pengaturan perusahaan & mode aplikasi berhasil disimpan!');
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,11 +101,17 @@ export const SettingsTemplatesPage: React.FC<SettingsTemplatesPageProps> = ({
   const handleSaveTemplate = async () => {
     await window.api.updatePdfTemplate(selectedDocType, htmlCode, cssCode);
     await loadTemplatesAndDb();
-    alert('Template PDF untuk ' + selectedDocType + ' berhasil disimpan!');
+    await showAlert('Template PDF untuk ' + selectedDocType + ' berhasil disimpan!');
   };
 
   const handleResetTemplate = async () => {
-    if (!confirm('Kembalikan template ' + selectedDocType + ' ke desain bawaan pabrik?')) return;
+    const ok = await showConfirm({
+      title: 'Reset Template PDF',
+      message: 'Kembalikan template ' + selectedDocType + ' ke desain bawaan pabrik?',
+      confirmText: 'Ya, Reset',
+      variant: 'warning',
+    });
+    if (!ok) return;
     await window.api.resetPdfTemplate(selectedDocType);
     await loadTemplatesAndDb();
   };
@@ -111,17 +119,23 @@ export const SettingsTemplatesPage: React.FC<SettingsTemplatesPageProps> = ({
   const handleBackupDb = async () => {
     const res = await window.api.backupDatabase();
     if (res.saved) {
-      alert('Backup database SQLite berhasil disimpan ke:\n' + res.filePath);
+      await showAlert('Backup database SQLite berhasil disimpan ke:\n' + res.filePath);
     }
   };
 
   const handleRestoreDb = async () => {
-    if (!confirm('Restore database akan menimpa seluruh data saat ini dengan file backup yang dipilih. Lanjutkan?')) {
+    const ok = await showConfirm({
+      title: 'Restore Database SQLite',
+      message: 'Restore database akan menimpa seluruh data saat ini dengan file backup yang dipilih. Lanjutkan?',
+      confirmText: 'Ya, Restore',
+      variant: 'warning',
+    });
+    if (!ok) {
       return;
     }
     const res = await window.api.restoreDatabase();
     if (res.restored) {
-      alert('Database berhasil di-restore! Aplikasi akan memuat ulang data.');
+      await showAlert('Database berhasil di-restore! Aplikasi akan memuat ulang data.');
       window.location.reload();
     }
   };

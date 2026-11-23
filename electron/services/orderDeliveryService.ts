@@ -6,6 +6,9 @@ import {
   DeliveryNoteDetail,
   DeliveryNoteForInvoiceResult,
   MutasiBarang,
+  MutasiBarangInput,
+  Sample,
+  SampleBarang,
   TransferDocumentPayload,
 } from '../../shared/types';
 
@@ -368,6 +371,242 @@ export function listMutasiBarang(barangId?: number): MutasiBarang[] {
      ORDER BY m.tgl DESC, m.id DESC`,
     params
   );
+}
+
+export function createManualMutasi(data: MutasiBarangInput): MutasiBarang {
+  let newId = 0;
+  runTransaction(() => {
+    const barangId = Number(data.barang_id);
+    const qty = Number(data.qty || 0);
+    if (!barangId || qty <= 0) {
+      throw new Error('Barang dan jumlah mutasi (> 0) wajib diisi.');
+    }
+    const barang = queryOne<{ stock: number }>('SELECT stock FROM barang WHERE id = ?', [barangId]);
+    if (!barang) {
+      throw new Error('Data barang tidak ditemukan.');
+    }
+    const stokSebelum = Number(barang.stock || 0);
+    const stokSesudah = data.type === 'in' ? stokSebelum + qty : stokSebelum - qty;
+
+    execute('UPDATE barang SET stock = ? WHERE id = ?', [stokSesudah, barangId], false);
+
+    const sourceText = String(data.source || '').trim() || 'MANUAL';
+    const res = execute(
+      `INSERT INTO mutasi_barang (barang_id, type, qty, stok_sebelum, stok_sesudah, tgl, source, delivery_note_id, sample_id, keterangan)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?)`,
+      [barangId, data.type, qty, stokSebelum, stokSesudah, data.tgl, sourceText, data.keterangan || ''],
+      false
+    );
+    newId = res.lastInsertRowid;
+  });
+  return queryOne<MutasiBarang>(
+    `SELECT m.*, b.kode AS barang_kode, b.nama AS barang_nama, b.satuan AS barang_satuan
+     FROM mutasi_barang m LEFT JOIN barang b ON m.barang_id = b.id WHERE m.id = ?`,
+    [newId]
+  )!;
+}
+
+export function updateManualMutasi(id: number, data: MutasiBarangInput): MutasiBarang {
+  runTransaction(() => {
+    const existing = queryOne<MutasiBarang>('SELECT * FROM mutasi_barang WHERE id = ?', [id]);
+    if (!existing) {
+      throw new Error('Data mutasi barang tidak ditemukan.');
+    }
+    if (existing.delivery_note_id || existing.sample_id) {
+      throw new Error('Mutasi otomatis dari Surat Jalan / Sample hanya dapat diubah melalui dokumen asalnya.');
+    }
+
+    // Rollback efek mutasi lama ke stok barang lama
+    const oldBarang = queryOne<{ stock: number }>('SELECT stock FROM barang WHERE id = ?', [existing.barang_id]);
+    if (oldBarang) {
+      const rollbackDelta = existing.type === 'in' ? -Number(existing.qty || 0) : Number(existing.qty || 0);
+      execute('UPDATE barang SET stock = ? WHERE id = ?', [Number(oldBarang.stock || 0) + rollbackDelta, existing.barang_id], false);
+    }
+
+    // Terapkan mutasi baru ke barang baru
+    const newBarangId = Number(data.barang_id);
+    const newQty = Number(data.qty || 0);
+    if (!newBarangId || newQty <= 0) {
+      throw new Error('Barang dan jumlah mutasi (> 0) wajib diisi.');
+    }
+    const targetBarang = queryOne<{ stock: number }>('SELECT stock FROM barang WHERE id = ?', [newBarangId]);
+    if (!targetBarang) {
+      throw new Error('Data barang tujuan tidak ditemukan.');
+    }
+
+    const stokSebelum = Number(targetBarang.stock || 0);
+    const stokSesudah = data.type === 'in' ? stokSebelum + newQty : stokSebelum - newQty;
+    execute('UPDATE barang SET stock = ? WHERE id = ?', [stokSesudah, newBarangId], false);
+
+    const sourceText = String(data.source || '').trim() || 'MANUAL';
+    execute(
+      `UPDATE mutasi_barang
+       SET barang_id = ?, type = ?, qty = ?, stok_sebelum = ?, stok_sesudah = ?, tgl = ?, source = ?, keterangan = ?
+       WHERE id = ?`,
+      [newBarangId, data.type, newQty, stokSebelum, stokSesudah, data.tgl, sourceText, data.keterangan || '', id],
+      false
+    );
+  });
+  return queryOne<MutasiBarang>(
+    `SELECT m.*, b.kode AS barang_kode, b.nama AS barang_nama, b.satuan AS barang_satuan
+     FROM mutasi_barang m LEFT JOIN barang b ON m.barang_id = b.id WHERE m.id = ?`,
+    [id]
+  )!;
+}
+
+export function deleteManualMutasi(id: number): void {
+  runTransaction(() => {
+    const existing = queryOne<MutasiBarang>('SELECT * FROM mutasi_barang WHERE id = ?', [id]);
+    if (!existing) return;
+    if (existing.delivery_note_id || existing.sample_id) {
+      throw new Error('Mutasi otomatis dari Surat Jalan / Sample tidak dapat dihapus langsung dari sini.');
+    }
+
+    const barang = queryOne<{ stock: number }>('SELECT stock FROM barang WHERE id = ?', [existing.barang_id]);
+    if (barang) {
+      const rollbackDelta = existing.type === 'in' ? -Number(existing.qty || 0) : Number(existing.qty || 0);
+      execute('UPDATE barang SET stock = ? WHERE id = ?', [Number(barang.stock || 0) + rollbackDelta, existing.barang_id], false);
+    }
+
+    execute('DELETE FROM mutasi_barang WHERE id = ?', [id], false);
+  });
+}
+
+// ==================== SAMPLES (TANDA TERIMA SAMPEL) ====================
+export function listSamples(): Sample[] {
+  return queryAll<Sample>(
+    `SELECT sp.*,
+            c.nama AS customer_nama,
+            c.alamat AS customer_alamat
+     FROM samples sp
+     LEFT JOIN customer c ON sp.id_customer = c.id
+     ORDER BY sp.tgl DESC, sp.id DESC`
+  );
+}
+
+export function getSampleById(id: number): Sample | null {
+  const sp = queryOne<Sample>(
+    `SELECT sp.*,
+            c.nama AS customer_nama,
+            c.alamat AS customer_alamat
+     FROM samples sp
+     LEFT JOIN customer c ON sp.id_customer = c.id
+     WHERE sp.id = ?`,
+    [id]
+  );
+  if (!sp) return null;
+  sp.details = queryAll<SampleBarang>(
+    `SELECT sb.*,
+            b.kode AS barang_kode,
+            b.nama AS barang_nama,
+            b.satuan AS barang_satuan,
+            b.part_number
+     FROM sample_barangs sb
+     LEFT JOIN barang b ON sb.id_barangs = b.id
+     WHERE sb.id_sample = ?
+     ORDER BY sb.id ASC`,
+    [id]
+  );
+  return sp;
+}
+
+function rollbackSampleEffects(sampleId: number): void {
+  const existingDetails = queryAll<SampleBarang>(
+    'SELECT * FROM sample_barangs WHERE id_sample = ?',
+    [sampleId]
+  );
+
+  for (const item of existingDetails) {
+    const qty = Number(item.qty || 0);
+    const barang = queryOne<{ stock: number }>('SELECT stock FROM barang WHERE id = ?', [item.id_barangs]);
+    if (barang) {
+      const restoredStock = Number(barang.stock || 0) + qty;
+      execute('UPDATE barang SET stock = ? WHERE id = ?', [restoredStock, item.id_barangs], false);
+    }
+  }
+
+  execute('DELETE FROM mutasi_barang WHERE sample_id = ?', [sampleId], false);
+  execute('DELETE FROM sample_barangs WHERE id_sample = ?', [sampleId], false);
+}
+
+function applySampleEffects(sampleId: number, data: Sample): void {
+  const details = data.details || [];
+  for (const item of details) {
+    const qty = Number(item.qty || 0);
+    if (qty <= 0) continue;
+
+    const barang = queryOne<{ stock: number; satuan: string }>('SELECT stock, satuan FROM barang WHERE id = ?', [
+      item.id_barangs,
+    ]);
+    const satuanFinal = String(item.satuan || '').trim() || barang?.satuan || 'PCS';
+
+    execute(
+      `INSERT INTO sample_barangs (id_sample, id_barangs, qty, satuan)
+       VALUES (?, ?, ?, ?)`,
+      [sampleId, item.id_barangs, qty, satuanFinal],
+      false
+    );
+
+    const stokSebelum = barang ? Number(barang.stock || 0) : 0;
+    const stokSesudah = stokSebelum - qty;
+
+    if (barang) {
+      execute('UPDATE barang SET stock = ? WHERE id = ?', [stokSesudah, item.id_barangs], false);
+    }
+
+    execute(
+      `INSERT INTO mutasi_barang (barang_id, type, qty, stok_sebelum, stok_sesudah, tgl, source, sample_id, keterangan)
+       VALUES (?, 'out', ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        item.id_barangs,
+        qty,
+        stokSebelum,
+        stokSesudah,
+        data.tgl,
+        `SP: ${data.no}`,
+        sampleId,
+        data.keterangan || 'Sample Barang untuk Customer',
+      ],
+      false
+    );
+  }
+}
+
+export function createSample(data: Sample): Sample {
+  let newId = 0;
+  runTransaction(() => {
+    const res = execute(
+      `INSERT INTO samples (no, tgl, id_customer, penerima_nama, keterangan)
+       VALUES (?, ?, ?, ?, ?)`,
+      [data.no, data.tgl, data.id_customer ?? null, data.penerima_nama || '', data.keterangan || ''],
+      false
+    );
+    newId = res.lastInsertRowid;
+    applySampleEffects(newId, data);
+  });
+  return getSampleById(newId)!;
+}
+
+export function updateSample(id: number, data: Sample): Sample {
+  runTransaction(() => {
+    rollbackSampleEffects(id);
+    execute(
+      `UPDATE samples
+       SET no = ?, tgl = ?, id_customer = ?, penerima_nama = ?, keterangan = ?
+       WHERE id = ?`,
+      [data.no, data.tgl, data.id_customer ?? null, data.penerima_nama || '', data.keterangan || '', id],
+      false
+    );
+    applySampleEffects(id, data);
+  });
+  return getSampleById(id)!;
+}
+
+export function deleteSample(id: number): void {
+  runTransaction(() => {
+    rollbackSampleEffects(id);
+    execute('DELETE FROM samples WHERE id = ?', [id], false);
+  });
 }
 
 // ==================== TRANSFER DOKUMEN ANTARDIVISI (.JSON) ====================

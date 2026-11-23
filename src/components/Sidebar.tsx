@@ -4,6 +4,7 @@ import {
   Package,
   ShoppingCart,
   Truck,
+  PackageCheck,
   ArrowLeftRight,
   FileText,
   Wallet,
@@ -20,6 +21,7 @@ export type NavPage =
   | 'master'
   | 'orders'
   | 'delivery_notes'
+  | 'samples'
   | 'mutasi'
   | 'invoices'
   | 'payments'
@@ -75,6 +77,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'delivery_notes',
       label: 'Surat Jalan',
       icon: <Truck className="h-4 w-4" />,
+      visible: showGudang,
+      badge: 'Mode 1',
+    },
+    {
+      id: 'samples',
+      label: 'Sample Barang',
+      icon: <PackageCheck className="h-4 w-4" />,
       visible: showGudang,
       badge: 'Mode 1',
     },

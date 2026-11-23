@@ -7,7 +7,7 @@ import { queryAll, queryOne, execute, getDbPath, reloadDatabaseFromFile } from '
 import { runMigrations } from '../db/migrations';
 import { DEFAULT_PDF_TEMPLATES } from '../db/defaultTemplates';
 import { AppSettings, DocType, PdfTemplate } from '../../shared/types';
-import { getOrderById, getOrderByNo, getDeliveryNoteById } from './orderDeliveryService';
+import { getOrderById, getOrderByNo, getDeliveryNoteById, getSampleById } from './orderDeliveryService';
 import { getInvoiceById } from './invoicePaymentService';
 
 // ==================== SETTINGS & TEMPLATES ====================
@@ -438,6 +438,47 @@ export function buildDocumentHtml(docType: DocType, docId: number): { html: stri
       bank_name: 'BCA',
       bank_account: '009-3333-095',
       bank_account_spaced: '009 - 3333 - 095',
+    };
+  } else if (docType === 'SAMPLE') {
+    const sp = getSampleById(docId);
+    if (!sp) throw new Error('Dokumen Sample tidak ditemukan.');
+    defaultFilename = `SAMPLE_${sp.no.replace(/[^a-zA-Z0-9-_]/g, '_')}.pdf`;
+
+    const formatCompanyTitle = (raw: string): string => {
+      const trimmed = String(raw || '').trim();
+      if (!trimmed) return 'PT Pilar Cerah Sejahtera';
+      return trimmed
+        .split(/\s+/)
+        .map((w) => (w.toUpperCase() === 'PT' || w.toUpperCase() === 'CV' ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
+        .join(' ');
+    };
+
+    const itemDescriptions = (sp.details || []).map((d) => {
+      const qtyStr = formatPlainNumber(d.qty, 2);
+      const satStr = escapeHtml(d.satuan || d.barang_satuan || 'PCS');
+      const namaStr = escapeHtml(d.barang_nama || '-');
+      return `${namaStr} = ${qtyStr} ${satStr}`;
+    });
+
+    const sampleItemsLines =
+      itemDescriptions.length <= 1
+        ? `<div class="line-val">${itemDescriptions[0] || '-'}</div><div class="line-sub"></div>`
+        : itemDescriptions.map((line) => `<div class="line-val">${line}</div>`).join('');
+
+    const penerimaNama = sp.customer_nama || sp.penerima_nama || '-';
+    const companyTitle = formatCompanyTitle(settings.company_name);
+    const companyCityUpper = String(settings.company_city || 'KEC. DRIYOREJO, KAB. GRESIK').toUpperCase();
+
+    vars = {
+      ...vars,
+      no: escapeHtml(sp.no),
+      tgl: escapeHtml(sp.tgl),
+      tgl_long: escapeHtml(formatLongDate(sp.tgl)),
+      company_name_title: escapeHtml(companyTitle),
+      company_city_upper: escapeHtml(companyCityUpper),
+      penerima_nama: escapeHtml(penerimaNama),
+      keterangan: escapeHtml(sp.keterangan || 'SAMPLE UNTUK CUSTOMER'),
+      sample_items_lines: sampleItemsLines,
     };
   }
 

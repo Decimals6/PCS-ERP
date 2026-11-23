@@ -52,6 +52,7 @@ export function previewHumanBackupCounts(startDate?: string, endDate?: string): 
     so: countOf(`SELECT COUNT(*) AS cnt FROM orders WHERE type = 'out'${orderFilter.sql}`, orderFilter.params),
     sj_in: countOf(`SELECT COUNT(*) AS cnt FROM delivery_notes WHERE type = 'in'${dnFilter.sql}`, dnFilter.params),
     sj_out: countOf(`SELECT COUNT(*) AS cnt FROM delivery_notes WHERE type = 'out'${dnFilter.sql}`, dnFilter.params),
+    sample: countOf(`SELECT COUNT(*) AS cnt FROM samples WHERE 1=1${dnFilter.sql}`, dnFilter.params),
     invoice_in: countOf(`SELECT COUNT(*) AS cnt FROM invoices WHERE type = 'in'${invFilter.sql}`, invFilter.params),
     invoice_out: countOf(`SELECT COUNT(*) AS cnt FROM invoices WHERE type = 'out'${invFilter.sql}`, invFilter.params),
     payment_in: countOf(`SELECT COUNT(*) AS cnt FROM payments WHERE type = 'in'${payFilter.sql}`, payFilter.params),
@@ -169,6 +170,44 @@ function fetchDeliveryNotesDataset(type: 'in' | 'out', startDate?: string, endDa
     Nama_Barang: r.barang_nama || '(Tidak ada detail item)',
     Qty_Barang: Number(r.qty_sent || 0),
     Satuan: r.barang_satuan || 'PCS',
+  }));
+}
+
+function fetchSamplesDataset(startDate?: string, endDate?: string): Record<string, any>[] {
+  const filter = buildDateWhere('sp.tgl', startDate, endDate);
+  const rows = queryAll<any>(
+    `SELECT
+       sp.no AS sample_no,
+       sp.tgl AS tgl,
+       c.kode AS customer_kode,
+       COALESCE(c.nama, sp.penerima_nama) AS penerima_nama,
+       sp.keterangan AS keterangan,
+       b.kode AS barang_kode,
+       b.part_number AS part_number,
+       b.nama AS barang_nama,
+       sb.qty AS qty,
+       COALESCE(sb.satuan, b.satuan) AS satuan
+     FROM samples sp
+     LEFT JOIN customer c ON sp.id_customer = c.id
+     LEFT JOIN sample_barangs sb ON sb.id_sample = sp.id
+     LEFT JOIN barang b ON sb.id_barangs = b.id
+     WHERE 1=1${filter.sql}
+     ORDER BY sp.tgl ASC, sp.id ASC, sb.id ASC`,
+    filter.params
+  );
+
+  return rows.map((r, idx) => ({
+    No_Urut: idx + 1,
+    No_Sample: r.sample_no || '-',
+    Tanggal: r.tgl || '-',
+    Kode_Customer: r.customer_kode || '-',
+    Penerima_Customer: r.penerima_nama || '-',
+    Keterangan: r.keterangan || '-',
+    Kode_Barang: r.barang_kode || '-',
+    Part_Number: r.part_number || '-',
+    Nama_Barang: r.barang_nama || '(Tidak ada detail item)',
+    Qty_Sample: Number(r.qty || 0),
+    Satuan: r.satuan || 'PCS',
   }));
 }
 
@@ -403,6 +442,14 @@ function buildDatasetSpec(key: ExportDatasetKey, startDate?: string, endDate?: s
         fileSlug: 'SJ_Keluar',
         label: 'Surat Jalan Keluar (Pengiriman)',
         rows: fetchDeliveryNotesDataset('out', startDate, endDate),
+      };
+    case 'sample':
+      return {
+        key,
+        sheetName: 'Tanda Terima Sampel',
+        fileSlug: 'Sample_Barang',
+        label: 'Tanda Terima Sampel (SP)',
+        rows: fetchSamplesDataset(startDate, endDate),
       };
     case 'invoice_in':
       return {

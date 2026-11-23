@@ -4,6 +4,7 @@ import { Barang, Customer, Supplier } from '../../shared/types';
 import { parseCsvOrJson } from '../utils/format';
 import { PaginationBar } from '../components/PaginationBar';
 import { compareStringsNatural, SortableTh, SortConfig, toggleSort } from '../components/SortableTh';
+import { useAppDialog } from '../components/AppDialogProvider';
 
 type MasterTab = 'barang' | 'customer' | 'supplier';
 
@@ -47,6 +48,7 @@ const CSV_TEMPLATES: Record<
 };
 
 export const MasterDataPage: React.FC = () => {
+  const { showConfirm, showAlert } = useAppDialog();
   const [tab, setTab] = useState<MasterTab>('barang');
   const [search, setSearch] = useState('');
 
@@ -165,7 +167,12 @@ export const MasterDataPage: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Hapus data master ini?')) return;
+    const ok = await showConfirm({
+      title: 'Hapus Data Master',
+      message: 'Hapus data master ini? Tindakan ini tidak dapat dibatalkan.',
+      confirmText: 'Ya, Hapus',
+    });
+    if (!ok) return;
     if (tab === 'barang') await window.api.deleteBarang(id);
     else if (tab === 'customer') await window.api.deleteCustomer(id);
     else await window.api.deleteSupplier(id);
@@ -202,16 +209,16 @@ export const MasterDataPage: React.FC = () => {
     try {
       const rows = parseCsvOrJson(importText);
       if (rows.length === 0) {
-        alert('Tidak ada baris data yang valid untuk di-import.');
+        await showAlert('Tidak ada baris data yang valid untuk di-import.');
         return;
       }
       const res = await window.api.bulkImportMaster(tab, rows);
-      alert('Import selesai!\nData baru ditambahkan: ' + res.inserted + '\nData diperbarui: ' + res.updated);
+      await showAlert('Import selesai!\nData baru ditambahkan: ' + res.inserted + '\nData diperbarui: ' + res.updated);
       setImportModalOpen(false);
       setImportText('');
       loadAll();
     } catch (err: any) {
-      alert('Gagal memproses file import: ' + (err?.message || err));
+      await showAlert('Gagal memproses file import: ' + (err?.message || err));
     }
   };
 

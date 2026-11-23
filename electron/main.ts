@@ -8,6 +8,7 @@ import * as orderDeliveryService from './services/orderDeliveryService';
 import * as invoicePaymentService from './services/invoicePaymentService';
 import * as pdfBackupService from './services/pdfBackupService';
 import * as exportBackupService from './services/exportBackupService';
+import * as updaterService from './services/updaterService';
 import { HumanBackupRequest, TransferDocumentPayload } from '../shared/types';
 
 let mainWindow: BrowserWindow | null = null;
@@ -76,6 +77,16 @@ function registerIpcHandlers(): void {
 
   // Mutasi Barang
   ipcMain.handle('mutasi:list', (_e, barangId) => orderDeliveryService.listMutasiBarang(barangId));
+  ipcMain.handle('mutasi:createManual', (_e, data) => orderDeliveryService.createManualMutasi(data));
+  ipcMain.handle('mutasi:updateManual', (_e, id, data) => orderDeliveryService.updateManualMutasi(id, data));
+  ipcMain.handle('mutasi:deleteManual', (_e, id) => orderDeliveryService.deleteManualMutasi(id));
+
+  // Samples
+  ipcMain.handle('sample:list', () => orderDeliveryService.listSamples());
+  ipcMain.handle('sample:getById', (_e, id) => orderDeliveryService.getSampleById(id));
+  ipcMain.handle('sample:create', (_e, data) => orderDeliveryService.createSample(data));
+  ipcMain.handle('sample:update', (_e, id, data) => orderDeliveryService.updateSample(id, data));
+  ipcMain.handle('sample:delete', (_e, id) => orderDeliveryService.deleteSample(id));
 
   // Invoices
   ipcMain.handle('invoice:list', (_e, type) => invoicePaymentService.listInvoices(type));
@@ -151,6 +162,11 @@ function registerIpcHandlers(): void {
   ipcMain.handle('backup:exportHuman', (_e, req: HumanBackupRequest) =>
     exportBackupService.exportHumanBackup(req)
   );
+
+  // OTA Auto-Update
+  ipcMain.handle('updater:version', () => updaterService.getCurrentAppVersion());
+  ipcMain.handle('updater:check', () => updaterService.checkForOtaUpdate());
+  ipcMain.handle('updater:apply', (_e, manifest) => updaterService.downloadAndApplyOtaUpdate(manifest));
 }
 
 app.whenReady().then(async () => {
