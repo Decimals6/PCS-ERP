@@ -1,0 +1,245 @@
+================================================================================
+PRODUCT REQUIREMENTS DOCUMENT (PRD)
+Nama Proyek  : Sistem Administrasi & Dokumen Offline (Desktop ERP Lite)
+Platform     : Desktop Windows (.exe Installer via Electron)
+Database     : Lokal SQLite (Single-file .db di AppData, tanpa server/XAMPP)
+Arsitektur   : Standalone Offline per Divisi (Tanpa Foreign Key constraint)
+================================================================================
+
+1. LATAR BELAKANG & TUJUAN
+--------------------------------------------------------------------------------
+Mengakomodasi kebutuhan operasional administrasi internal perusahaan secara 
+100% offline di masing-masing komputer divisi, menggantikan pencatatan 
+manual/Excel yang rawan kesalahan hitung, serta menyediakan pembuatan dokumen 
+standar (PO, SO, Surat Jalan, Invoice) dalam format PDF yang rapi dan mudah 
+dikustomisasi.
+
+Target Pengguna (Role / Mode Aplikasi):
+Aplikasi dibangun dalam 1 codebase yang dapat dikonfigurasi tampilannya (atau 
+di-build terpisah) menjadi 2 mode operasional:
+- Mode 1: Pemesanan & Gudang (Purchasing / Sales / Warehouse)
+  Fokus pada pembuatan PO/SO, penerbitan Surat Jalan (Masuk/Keluar), dan 
+  pencatatan mutasi stok lokal.
+- Mode 2: Pembukuan & Keuangan (Finance / Accounting)
+  Fokus pada pembuatan Invoice (Masuk/Keluar) berdasarkan nomor PO/SO/Surat 
+  Jalan, serta pemantauan status Hutang & Piutang.
+
+
+2. RUANG LINGKUP FITUR UTAMA
+--------------------------------------------------------------------------------
+
+2.1. Modul 1: Pemesanan & Surat Jalan (Mode Pemesanan/Gudang)
+- Purchase Order (PO) & Sales Order (SO):
+  * Input data transaksi pemesanan masuk (in / PO) dan keluar (out / SO).
+  * Kalkulasi otomatis komponen biaya: Total = (DPP - Diskon) + PPN.
+  * Cetak/Export dokumen PO & SO ke PDF.
+- Surat Jalan (Delivery Notes):
+  * Pembuatan dokumen penerimaan barang (in) atau pengiriman barang (out) 
+    dengan referensi nomor PO/SO (order_no).
+  * Pencatatan kuantitas terkirim/diterima (qty_sent) per item.
+  * Pemicu Mutasi Stok: Setiap penyimpanan Surat Jalan otomatis mencatat 
+    riwayat keluar/masuk barang ke tabel mutasi_barang dan memperbarui stok 
+    akhir di master barang.
+  * Cetak/Export dokumen Surat Jalan ke PDF.
+
+2.2. Modul 2: Pembukuan, Invoice & Hutang Piutang (Mode Finance)
+- Pembuatan Invoice (Masuk & Keluar):
+  * Input tagihan berdasarkan referensi order_no dan delivery_note_no.
+  * Kalkulasi otomatis: Total = (DPP - Diskon) + PPN.
+  * Cetak/Export dokumen Invoice ke PDF.
+- Manajemen Hutang & Piutang (AR/AP):
+  * Rekapitulasi otomatis daftar Invoice berdasarkan status pembayaran 
+    (Belum Lunas, Cicil, Lunas) melalui perbandingan nilai total vs paid.
+  * untuk perhitungan total piutang/hutang itu dari TOTAL + ongkir, dikarenakan di invoice fisik hanya mencatat total tanpa ongkir
+  * Fitur pencatatan pelunasan/pembayaran bertahap melalui tabel payment dan memperbarui nominal paid.
+
+2.3. Modul Master Data & Utilitas
+- Manajemen Master Data: CRUD sederhana untuk data barang, customer, dan supplier.
+- Import Master Data (Migrasi dari Server Lama):
+  * Fitur unggah file CSV / JSON (hasil export dari MySQL/Laravel lama) untuk 
+    mengisi tabel barang, customer, dan supplier secara massal.
+- Transfer Dokumen Antardivisi (Opsional / Offline Bridge):
+  * Tombol Export Dokumen (.json) pada PO/SO/Surat Jalan dan tombol Import 
+    Dokumen (.json) pada modul tujuan agar admin divisi lain tidak perlu 
+    mengetik ulang item dokumen saat serah terima berkas secara offline.
+- Kustomisasi Layout Cetak PDF:
+  * Halaman pengaturan template dokumen berbasis HTML/CSS (ubah Kop Surat, 
+    Alamat Perusahaan, Syarat & Ketentuan/Catatan Kaki, dan Kolom Tanda Tangan) 
+    tanpa perlu kompilasi ulang aplikasi .exe.
+
+ 2.4 perlu dipastikan bahwa dalam sistem ini bisa melakukan CRUD, sehingga perlu dipastikan detail ketika delete ataupun
+     update, itu mana saja yang perlu dirubah juga...
+
+
+3. STRUKTUR DATABASE (DRAFT LOKAL SQLITE)
+--------------------------------------------------------------------------------
+Catatan: Seluruh tabel menggunakan pendekatan denormalisasi ringan berbasis 
+nomor dokumen/kode tanpa Foreign Key constraint ketat agar fleksibel saat input 
+manual maupun import data.
+
+[A. TABEL TRANSAKSI]
+
+1. orders (Menyimpan header PO dan SO)
+   - id
+   - tgl
+   - no
+   - type (in/out)
+   - cust_id
+   - supp_id
+   - dpp
+   - ppn
+   - diskon
+   - ongkir
+   - total
+
+2. order_details (Menyimpan item barang pada PO/SO)
+   - id
+   - order_id
+   - barang_id
+   - qty
+   - qty_sent
+   - price
+   - satuan
+   - subtotal
+
+
+3. delivery_notes (Menyimpan header Surat Jalan masuk/keluar)
+   - id
+   - no (nomor dokumen Surat Jalan)
+   - tgl
+   - order_no
+   - alamat_tujuan
+   - keterangan
+   - type (in/out)
+
+4. delivery_note_details (Menyimpan rincian barang pada Surat Jalan)
+   - id
+   - delivery_note_id
+   - order_detail_id (nullable, referensi item PO/SO asal untuk rollback qty_sent)
+   - barang_id
+   - qty_sent
+
+5. invoices (Menyimpan header Invoice masuk/keluar & status pembayaran)
+   - id
+   - no
+   - tgl
+   - type (in/out)
+   - order_no
+   - delivery_note_no
+   - dpp
+   - ppn
+   - ppn_nominal
+   - cust_id
+   - supp_id
+   - diskon
+   - ongkir
+   - total
+   - paid
+   - status (Belum Lunas / Cicil / Lunas)
+
+6. invoice_details (Menyimpan rincian item pada Invoice)
+   - id
+   - invoice_id
+   - barang_id
+   - qty
+   - satuan
+   - price
+   - subtotal
+
+7. payments (menyimpan riwayat pembayaran)
+   - id
+   - no
+   - tgl
+   - total (total yang dibayarkan)
+   - received (nominal asli yang diterima)
+   - deduction (potongan mungkin karna administrasi dll)
+   - deduction_note
+   - keterangan
+   - type (in/out)
+   - cust_id
+   - supp_id
+
+8. payment_details (refresi invoice yang dibayarkan)
+   - id
+   - payment_id
+   - subtotal
+   - invoice_id
+
+(logikanya, user hanya melakukan pembayaran dengan nominal, nanti sistem
+ yang menentukan nominal tersebut untuk pembayaran invoice mana saja (sistem
+ memilihkan dulu otomatis berdasarkan invoice terlama yang belum lunas) tapi
+ setelah dipilihkan user tetep bisa milih, invoice mana aja yang mau di pilih)
+ jadi kek list nya dimasukin gitu list invoice, trus user bisa milih ulang, misal dihapus kek
+ ditambahi kek, diganti, otomatis payment nya juga berubah sedikit berdasarkan nominal invoice
+ ya intinya bisa fleksibel
+
+
+9. mutasi_barang (Log pergerakan stok dari Surat Jalan)
+   - id
+   - barang_id
+   - type (in/out)
+   - qty
+   - stok_sebelum
+   - stok_sesudah
+   - tgl
+   - source
+   - delivery_note_id (nullable)
+   - keterangan
+
+[B. TABEL MASTER DATA]
+
+8. barang
+   - id
+   - kode
+   - part_number
+   - supplier_id
+   - nama
+   - satuan
+   - keterangan
+   - stock
+
+9. customer
+   - id
+   - kode
+   - nama
+   - alamat
+   - email
+   - telepon
+   - UP
+
+10. supplier
+   - id
+   - kode
+   - nama
+   - alamat
+   - email
+   - telepon
+   - UP
+
+[C. TABEL KONFIGURASI & TEMPLATE SISTEM]
+
+11. pdf_templates (Menyimpan template HTML/CSS dokumen cetak)
+   - id
+   - doc_type (PO / SO / SJ / INVOICE)
+   - name
+   - html_content
+   - css_content
+   - updated_at
+
+12. app_settings (Menyimpan konfigurasi mode aplikasi & profil perusahaan)
+   - key (app_mode, company_name, company_address, company_phone, dll)
+   - value
+
+
+4. KEBUTUHAN NON-FUNGSIONAL & DISTRIBUSI
+--------------------------------------------------------------------------------
+- Kemudahan Instalasi: Dikemas menjadi satu file installer Windows (Setup.exe) 
+  menggunakan electron-builder (NSIS). Admin cukup menjalankan installer tanpa 
+  konfigurasi tambahan.
+- Auto-Migration Database: Aplikasi mengecek versi skema (PRAGMA user_version) 
+  setiap kali dijalankan. Jika versi aplikasi diperbarui (menimpa .exe lama), 
+  struktur tabel baru akan ditambahkan otomatis tanpa menghapus data transaksi 
+  yang sudah tersimpan di komputer admin.
+- Backup Mandiri: Menyediakan tombol Backup Database (menyalin file .db ke 
+  folder pilihan/flashdisk) untuk keamanan data lokal.
+================================================================================

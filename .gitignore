@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build Outputs & Installer
+dist/
+dist-electron/
+release/
+
+# Local SQLite Databases & Backups
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Logs & Environment
+*.log
+npm-debug.log*
+.env
+.env.local
+
+# OS & Editor Artifacts
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
