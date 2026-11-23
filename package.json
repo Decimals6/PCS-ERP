@@ -1,6 +1,6 @@
 {
   "name": "desktop-erp-lite",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PCS-ERP â€” Sistem Administrasi & Dokumen Offline",
   "main": "dist-electron/electron/main.js",
   "scripts": {

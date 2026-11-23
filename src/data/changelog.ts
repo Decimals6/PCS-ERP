@@ -13,16 +13,43 @@ export interface AppRelease {
   changes: ReleaseNoteItem[];
 }
 
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.0.1';
 export const APP_NAME = 'PCS-ERP';
 
 export const APP_RELEASES: AppRelease[] = [
+  {
+    version: '1.0.1',
+    date: '24 November 2026',
+    codename: 'fitur sample, dan update patch',
+    schemaVersion: 6,
+    isCurrent: true,
+    summary:
+      'Pembaruan modul manajemen Sample Barang, pencatatan Mutasi Stok manual, sistem OTA Auto-Update langsung dari dalam aplikasi, serta perbaikan stabilitas dan tampilan.',
+    changes: [
+      {
+        type: 'feature',
+        text: 'Modul Sample Barang: Pencatatan transaksi pengiriman dan penerimaan sampel barang ke Customer maupun dari Supplier lengkap dengan status pelacakan, cetak dokumen tanda terima sampel, serta filter pencarian.',
+      },
+      {
+        type: 'feature',
+        text: 'Mutasi Stok Manual & Kartu Stok: Penambahan fitur input penyesuaian stok manual (Stok Masuk/Keluar non-PO/SO seperti stock opname, barang rusak, atau koreksi gudang) yang langsung tercatat pada riwayat kartu stok.',
+      },
+      {
+        type: 'feature',
+        text: 'Sistem OTA (Over-The-Air) Auto-Update: Pengecekan versi terbaru otomatis dari GitHub dengan verifikasi integritas SHA-256 dan tombol Update & Restart satu klik tanpa perlu menjalankan ulang file installer.',
+      },
+      {
+        type: 'improvement',
+        text: 'Perbaikan bug tampilan karakter simbol (encoding UTF-8) pada header, sidebar, dan halaman dokumentasi, serta penyempurnaan validasi form dan sinkronisasi status dokumen.',
+      },
+    ],
+  },
   {
     version: '1.0.0',
     date: '23 November 2026',
     codename: 'Initial Production Release',
     schemaVersion: 6,
-    isCurrent: true,
+    isCurrent: false,
     summary:
       'Rilis perdana PCS-ERP offline untuk operasional administrasi Order, Gudang, Surat Jalan, Invoice, Pelunasan FIFO, dan cetak dokumen PDF perusahaan.',
     changes: [

@@ -1,0 +1,7 @@
+{
+  "version": "1.0.1",
+  "releaseDate": "24 November 2026",
+  "notes": "fitur sample, dan update patch",
+  "bundleUrl": "https://raw.githubusercontent.com/Decimals6/PCS-ERP/main/ota/app-bundle.zip",
+  "sha256": "09f42adb4f0e07b7692be47f26196899f8fc8aa00ddffd4f93747ec1b2e87fe9"
+}

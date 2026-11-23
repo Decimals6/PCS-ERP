@@ -118,7 +118,7 @@ export const DocsVersionPage: React.FC = () => {
               </span>
               <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Schema DB v{currentRelease.schemaVersion} â€¢ Offline Ready
+                Schema DB v{currentRelease.schemaVersion} &bull; Offline Ready
               </span>
             </div>
             <h1 className="text-2xl font-bold text-slate-900">Panduan Penggunaan &amp; Versi Sistem</h1>
@@ -304,10 +304,10 @@ export const DocsVersionPage: React.FC = () => {
                   <span className="font-bold text-slate-900">Semua Modul (Gabungan):</span> Menampilkan seluruh menu dari Gudang hingga Finance dalam satu layar.
                 </li>
                 <li className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-                  <span className="font-bold text-slate-900">Mode 1 â€” Order &amp; Gudang:</span> Fokus pada Master Data, PO/SO, Surat Jalan, dan Mutasi Stok.
+                  <span className="font-bold text-slate-900">Mode 1 &mdash; Order &amp; Gudang:</span> Fokus pada Master Data, PO/SO, Surat Jalan, dan Mutasi Stok.
                 </li>
                 <li className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-                  <span className="font-bold text-slate-900">Mode 2 â€” Finance / Accounting:</span> Fokus pada Invoice Hutang/Piutang, Pelunasan FIFO, dan Laporan.
+                  <span className="font-bold text-slate-900">Mode 2 &mdash; Finance / Accounting:</span> Fokus pada Invoice Hutang/Piutang, Pelunasan FIFO, dan Laporan.
                 </li>
               </ul>
             </div>
@@ -395,7 +395,7 @@ export const DocsVersionPage: React.FC = () => {
                     )}
                   </div>
                   <div className="text-xs font-medium text-slate-500">
-                    Rilis: {release.date} â€¢ DB Schema v{release.schemaVersion}
+                    Rilis: {release.date} &bull; DB Schema v{release.schemaVersion}
                   </div>
                 </div>
 

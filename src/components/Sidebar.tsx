@@ -137,7 +137,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold text-white">{companyName}</p>
-            <p className="text-[11px] text-slate-400">{APP_NAME} â€¢ v{APP_VERSION}</p>
+            <p className="text-[11px] text-slate-400">{APP_NAME} &bull; v{APP_VERSION}</p>
           </div>
         </div>
         <div className="mt-3">
