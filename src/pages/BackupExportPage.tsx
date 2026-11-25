@@ -147,6 +147,7 @@ export const BackupExportPage: React.FC<BackupExportPageProps> = ({ appMode }) =
   });
   const [counts, setCounts] = useState<HumanBackupPreviewCounts | null>(null);
   const [dbPath, setDbPath] = useState<string>('');
+  const [customBackupDir, setCustomBackupDir] = useState<string>('');
   const [exporting, setExporting] = useState(false);
   const [lastResult, setLastResult] = useState<HumanBackupResult | null>(null);
 
@@ -157,6 +158,9 @@ export const BackupExportPage: React.FC<BackupExportPageProps> = ({ appMode }) =
 
   useEffect(() => {
     window.api.getDbPath().then(setDbPath);
+    window.api.getAppSettings().then((s) => {
+      setCustomBackupDir(String(s?.custom_backup_dir || ''));
+    });
   }, []);
 
   useEffect(() => {
@@ -226,10 +230,25 @@ export const BackupExportPage: React.FC<BackupExportPageProps> = ({ appMode }) =
     }
   };
 
+  const handlePickCustomFolder = async () => {
+    const res = await window.api.selectCustomBackupFolder();
+    if (res.selected && res.folderPath) {
+      setCustomBackupDir(res.folderPath);
+    }
+  };
+
+  const handleClearCustomFolder = async () => {
+    await window.api.updateAppSettings({ custom_backup_dir: '' });
+    setCustomBackupDir('');
+  };
+
   const handleBackupDb = async () => {
     const res = await window.api.backupDatabase();
     if (res.saved) {
-      await showAlert('Backup database SQLite (.db) berhasil disimpan ke:\n' + res.filePath);
+      const extraCopy = res.customBackupPath
+        ? '\n\nSalinan otomatis juga disimpan ke folder pilihan:\n' + res.customBackupPath
+        : '';
+      await showAlert('Backup database SQLite (.db) berhasil disimpan ke:\n' + res.filePath + extraCopy);
     }
   };
 
@@ -335,7 +354,7 @@ export const BackupExportPage: React.FC<BackupExportPageProps> = ({ appMode }) =
                 <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
                 <div>
                   <h2 className="text-base font-bold text-slate-800">
-                    1. Backup Arsip Terbaca Manusia (Excel / CSV)
+                    1. Backup Arsip Readable (Excel / CSV)
                   </h2>
                   <p className="text-xs text-slate-500">
                     Pilih rentang tanggal transaksi dan centang jenis data yang ingin di-export.
@@ -396,8 +415,8 @@ export const BackupExportPage: React.FC<BackupExportPageProps> = ({ appMode }) =
                   onChange={(e) => setFormat(e.target.value as 'xlsx' | 'csv')}
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium"
                 >
-                  <option value="xlsx">Excel (.xlsx) â€” Multi-Sheet</option>
-                  <option value="csv">CSV (.csv) â€” Terpisah per File</option>
+                  <option value="xlsx">Excel (.xlsx) - Multi-Sheet</option>
+                  <option value="csv">CSV (.csv) - Terpisah per File</option>
                 </select>
               </div>
 
@@ -444,7 +463,7 @@ export const BackupExportPage: React.FC<BackupExportPageProps> = ({ appMode }) =
             {/* ACTION EXPORT */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
               <div className="text-xs text-slate-600">
-                Terpilih: <span className="font-bold text-slate-900">{selectedKeys.length}</span> jenis data â€¢{' '}
+                Terpilih: <span className="font-bold text-slate-900">{selectedKeys.length}</span> jenis data -{' '}
                 {format === 'xlsx'
                   ? 'Disimpan menjadi 1 file Excel berisi sheet terpisah per data'
                   : selectedKeys.length > 1
@@ -511,6 +530,42 @@ export const BackupExportPage: React.FC<BackupExportPageProps> = ({ appMode }) =
               <span className="font-sans font-semibold text-slate-700">Lokasi Database Aktif:</span>
               <br />
               {dbPath || '-'}
+            </div>
+
+            <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 text-xs space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-semibold text-slate-800">Folder Salinan Otomatis (Opsional):</span>
+                <div className="flex items-center gap-1.5">
+                  {customBackupDir && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => window.api.openBackupLocation(customBackupDir)}
+                        className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        Buka
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleClearCustomFolder}
+                        className="rounded border border-rose-200 bg-white px-2 py-0.5 text-[11px] font-medium text-rose-600 hover:bg-rose-50"
+                      >
+                        Hapus
+                      </button>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handlePickCustomFolder}
+                    className="rounded bg-blue-600 px-2.5 py-0.5 text-[11px] font-semibold text-white hover:bg-blue-700"
+                  >
+                    {customBackupDir ? 'Ubah Folder' : 'Pilih Folder'}
+                  </button>
+                </div>
+              </div>
+              <p className="font-mono text-[11px] break-all text-slate-600">
+                {customBackupDir || 'Belum diatur - backup hanya disimpan di folder internal / lokasi Save As.'}
+              </p>
             </div>
 
             <div className="space-y-2.5 pt-1">

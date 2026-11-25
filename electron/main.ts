@@ -19,7 +19,7 @@ function createMainWindow(): void {
     height: 840,
     minWidth: 1080,
     minHeight: 680,
-    title: 'PCS-ERP â€” Sistem Administrasi & Dokumen Offline',
+    title: 'PCS-ERP - Sistem Administrasi & Dokumen Offline',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -80,6 +80,9 @@ function registerIpcHandlers(): void {
   ipcMain.handle('mutasi:createManual', (_e, data) => orderDeliveryService.createManualMutasi(data));
   ipcMain.handle('mutasi:updateManual', (_e, id, data) => orderDeliveryService.updateManualMutasi(id, data));
   ipcMain.handle('mutasi:deleteManual', (_e, id) => orderDeliveryService.deleteManualMutasi(id));
+  ipcMain.handle('mutasi:rebuildFromDocs', (_e, options) =>
+    orderDeliveryService.rebuildMutasiAndStockFromDocuments(options)
+  );
 
   // Samples
   ipcMain.handle('sample:list', () => orderDeliveryService.listSamples());
@@ -154,6 +157,8 @@ function registerIpcHandlers(): void {
   ipcMain.handle('db:backup', () => pdfBackupService.backupDatabase());
   ipcMain.handle('db:restore', () => pdfBackupService.restoreDatabase());
   ipcMain.handle('db:path', () => getDbPath());
+  ipcMain.handle('db:selectCustomBackupFolder', () => pdfBackupService.selectCustomBackupFolder());
+  ipcMain.handle('db:openLocation', (_e, targetPath: string) => pdfBackupService.openBackupLocation(targetPath));
 
   // Human-Readable Excel / CSV Backup
   ipcMain.handle('backup:previewCounts', (_e, startDate?: string, endDate?: string) =>

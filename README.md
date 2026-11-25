@@ -1,4 +1,4 @@
-# PCS-ERP â€” Sistem Administrasi, Gudang & Finance Offline
+# PCS-ERP - Sistem Administrasi, Gudang & Finance Offline
 
 Aplikasi desktop administrasi operasional dan keuangan berbasis offline untuk **PT. Pilar Cerah Sejahtera**. Dibangun menggunakan Electron, React, TypeScript, Tailwind CSS, dan SQLite lokal sehingga seluruh pencatatan transaksi berjalan cepat tanpa bergantung pada koneksi internet.
 
@@ -8,8 +8,8 @@ Aplikasi desktop administrasi operasional dan keuangan berbasis offline untuk **
 
 ### 1. Tiga Mode Operasi per Divisi
 Aplikasi dapat diatur sesuai kebutuhan komputer masing-masing divisi melalui menu **Pengaturan** atau pilihan cepat di **Sidebar**:
-- **Mode 1 â€” Order & Gudang**: Fokus pada pengelolaan Master Data, Purchase Order (PO), Sales Order (SO), Surat Jalan Masuk/Keluar, dan Buku Besar Mutasi Stok.
-- **Mode 2 â€” Finance / Accounting**: Fokus pada penagihan Invoice Piutang/Hutang, impor data transaksi dari divisi Gudang, serta Pelunasan otomatis (FIFO).
+- **Mode 1 - Order & Gudang**: Fokus pada pengelolaan Master Data, Purchase Order (PO), Sales Order (SO), Surat Jalan Masuk/Keluar, dan Buku Besar Mutasi Stok.
+- **Mode 2 - Finance / Accounting**: Fokus pada penagihan Invoice Piutang/Hutang, impor data transaksi dari divisi Gudang, serta Pelunasan otomatis (FIFO).
 - **Mode Gabungan (Semua Modul)**: Menampilkan seluruh fitur Gudang dan Finance dalam satu aplikasi.
 
 ### 2. Manajemen Master Data & Import Massal

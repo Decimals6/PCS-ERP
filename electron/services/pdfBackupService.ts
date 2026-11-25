@@ -3,7 +3,7 @@ import { execFile } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { queryAll, queryOne, execute, getDbPath, reloadDatabaseFromFile } from '../db/database';
+import { queryAll, queryOne, execute, getDbPath, reloadDatabaseFromFile, saveDatabase } from '../db/database';
 import { runMigrations } from '../db/migrations';
 import { DEFAULT_PDF_TEMPLATES } from '../db/defaultTemplates';
 import { AppSettings, DocType, PdfTemplate } from '../../shared/types';
@@ -27,6 +27,7 @@ export function getAppSettings(): AppSettings {
     po_signer_name: map.po_signer_name || 'Tri Tjahyono Eprijarto',
     po_signer_title: map.po_signer_title || 'Direktur',
     default_ppn: map.default_ppn || '11',
+    custom_backup_dir: map.custom_backup_dir || '',
   };
 }
 
@@ -596,12 +597,71 @@ export async function printDocumentDirect(
 }
 
 // ==================== BACKUP & RESTORE DB ====================
-export async function backupDatabase(): Promise<{ saved: boolean; filePath?: string }> {
+export function copyBackupToCustomFolder(sourceBackupPath: string): string | undefined {
+  const settings = getAppSettings();
+  const customDir = String(settings.custom_backup_dir || '').trim();
+  if (!customDir) return undefined;
+
+  try {
+    if (!fs.existsSync(customDir)) {
+      fs.mkdirSync(customDir, { recursive: true });
+    }
+    const destPath = path.join(customDir, path.basename(sourceBackupPath));
+    if (path.resolve(sourceBackupPath) !== path.resolve(destPath)) {
+      fs.copyFileSync(sourceBackupPath, destPath);
+    }
+    return destPath;
+  } catch (err) {
+    console.error('Gagal menyalin backup ke custom folder:', err);
+    return undefined;
+  }
+}
+
+export async function selectCustomBackupFolder(): Promise<{ selected: boolean; folderPath?: string }> {
+  const settings = getAppSettings();
+  const currentDir = String(settings.custom_backup_dir || '').trim();
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Pilih Folder Salinan Backup Database',
+    defaultPath: currentDir && fs.existsSync(currentDir) ? currentDir : undefined,
+    properties: ['openDirectory', 'createDirectory'],
+  });
+
+  if (canceled || !filePaths?.[0]) {
+    return { selected: false };
+  }
+
+  const folderPath = filePaths[0];
+  updateAppSettings({ custom_backup_dir: folderPath });
+  return { selected: true, folderPath };
+}
+
+export function openBackupLocation(targetPath: string): void {
+  if (!targetPath || !fs.existsSync(targetPath)) return;
+  const stat = fs.statSync(targetPath);
+  if (stat.isDirectory()) {
+    shell.openPath(targetPath);
+  } else {
+    shell.showItemInFolder(targetPath);
+  }
+}
+
+export async function backupDatabase(): Promise<{
+  saved: boolean;
+  filePath?: string;
+  customBackupPath?: string;
+}> {
+  saveDatabase();
   const currentDbPath = getDbPath();
+  const settings = getAppSettings();
+  const customDir = String(settings.custom_backup_dir || '').trim();
   const dateStamp = new Date().toISOString().slice(0, 10);
+  const defaultFilename = `backup_erp_offline_${dateStamp}.db`;
+  const defaultPath =
+    customDir && fs.existsSync(customDir) ? path.join(customDir, defaultFilename) : defaultFilename;
+
   const { canceled, filePath } = await dialog.showSaveDialog({
     title: 'Backup Database Lokal (.db)',
-    defaultPath: `backup_erp_offline_${dateStamp}.db`,
+    defaultPath,
     filters: [{ name: 'SQLite Database', extensions: ['db'] }],
   });
 
@@ -610,7 +670,8 @@ export async function backupDatabase(): Promise<{ saved: boolean; filePath?: str
   }
 
   fs.copyFileSync(currentDbPath, filePath);
-  return { saved: true, filePath };
+  const customBackupPath = copyBackupToCustomFolder(filePath);
+  return { saved: true, filePath, customBackupPath };
 }
 
 export async function restoreDatabase(): Promise<{ restored: boolean; filePath?: string }> {

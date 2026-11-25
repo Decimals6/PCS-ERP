@@ -13,16 +13,43 @@ export interface AppRelease {
   changes: ReleaseNoteItem[];
 }
 
-export const APP_VERSION = '1.0.1';
+export const APP_VERSION = '1.0.2';
 export const APP_NAME = 'PCS-ERP';
 
 export const APP_RELEASES: AppRelease[] = [
   {
+    version: '1.0.2',
+    date: '25 November 2026',
+    codename: 'Rebuild Stok, Mutasi Kronologis & Dual-Backup',
+    schemaVersion: 7,
+    isCurrent: true,
+    summary:
+      'Penambahan fitur Rebuild Stok & Mutasi otomatis dari dokumen, penyempurnaan perhitungan saldo berjalan kronologis pada Buku Besar Mutasi Barang, serta sistem Dual-Backup database SQLite.',
+    changes: [
+      {
+        type: 'feature',
+        text: 'Rebuild Stok & Mutasi dari Dokumen: Utilitas sinkronisasi ulang buku besar stok secara kronologis dari seluruh Surat Jalan (SJ) dan Tanda Terima Sampel (SP), mendukung mode Rombak Total (reset stok awal ke 0) maupun Mulai Tanggal Tertentu s/d Sekarang dengan opsi mempertahankan mutasi manual.',
+      },
+      {
+        type: 'feature',
+        text: 'Mutasi Stok Manual & Saldo Berjalan Kronologis: Dukungan penuh CRUD mutasi manual (Stock Opname, Retur/Kerusakan, Penyesuaian Gudang, Produksi/Repack) dengan kalkulasi ulang otomatis stok sebelum & sesudah secara kronologis saat mutasi disisipkan pada tanggal lampau.',
+      },
+      {
+        type: 'feature',
+        text: 'Sistem Dual-Backup & Folder Salinan Otomatis: Auto-backup database (.db) sebelum proses rebuild serta dukungan konfigurasi folder salinan eksternal (misal folder cloud sync) untuk backup manual maupun otomatis.',
+      },
+      {
+        type: 'database',
+        text: 'Skema database lokal SQLite v7 dengan tabel Sample Barang (samples, sample_barangs) dan relasi sample_id pada mutasi_barang.',
+      },
+    ],
+  },
+  {
     version: '1.0.1',
     date: '24 November 2026',
     codename: 'fitur sample, dan update patch',
-    schemaVersion: 6,
-    isCurrent: true,
+    schemaVersion: 7,
+    isCurrent: false,
     summary:
       'Pembaruan modul manajemen Sample Barang, pencatatan Mutasi Stok manual, sistem OTA Auto-Update langsung dari dalam aplikasi, serta perbaikan stabilitas dan tampilan.',
     changes: [

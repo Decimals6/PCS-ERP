@@ -10,6 +10,8 @@ import {
   MutasiBarangInput,
   Order,
   Payment,
+  RebuildMutasiOptions,
+  RebuildMutasiResult,
   Sample,
   Supplier,
   TransferDocumentPayload,
@@ -59,6 +61,8 @@ const api = {
   createManualMutasi: (data: MutasiBarangInput) => ipcRenderer.invoke('mutasi:createManual', data),
   updateManualMutasi: (id: number, data: MutasiBarangInput) => ipcRenderer.invoke('mutasi:updateManual', id, data),
   deleteManualMutasi: (id: number) => ipcRenderer.invoke('mutasi:deleteManual', id),
+  rebuildMutasiFromDocs: (options: RebuildMutasiOptions) =>
+    ipcRenderer.invoke('mutasi:rebuildFromDocs', options) as Promise<RebuildMutasiResult>,
 
   // Samples
   listSamples: () => ipcRenderer.invoke('sample:list'),
@@ -101,6 +105,8 @@ const api = {
   backupDatabase: () => ipcRenderer.invoke('db:backup'),
   restoreDatabase: () => ipcRenderer.invoke('db:restore'),
   getDbPath: () => ipcRenderer.invoke('db:path'),
+  selectCustomBackupFolder: () => ipcRenderer.invoke('db:selectCustomBackupFolder'),
+  openBackupLocation: (targetPath: string) => ipcRenderer.invoke('db:openLocation', targetPath),
   previewHumanBackupCounts: (startDate?: string, endDate?: string) =>
     ipcRenderer.invoke('backup:previewCounts', startDate, endDate),
   exportHumanBackup: (req: HumanBackupRequest) => ipcRenderer.invoke('backup:exportHuman', req),

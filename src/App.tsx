@@ -88,7 +88,7 @@ export default function App() {
                 <Sparkles className="h-4 w-4 flex-shrink-0 text-emerald-600" />
                 <span>
                   Pembaruan aplikasi <strong>v{availableUpdate.latestVersion}</strong> tersedia!
-                  {availableUpdate.notes ? ` â€” ${availableUpdate.notes}` : ''}
+                  {availableUpdate.notes ? ` - ${availableUpdate.notes}` : ''}
                 </span>
               </div>
               <div className="flex items-center gap-2">

@@ -17,43 +17,43 @@ Dokumen ini menjadi acuan standar bagi developer maupun AI coding agent dalam me
 
 ## 2. Struktur Direktori Proyek
 
-- `AGENT_RULES.md` â€” Dokumen panduan arsitektur & aturan pengembangan ini.
-- `package.json` â€” Konfigurasi dependencies, scripts, dan `electron-builder`.
-- `tsconfig.json` â€” Konfigurasi TypeScript untuk Frontend (`src/`).
-- `tsconfig.electron.json` â€” Konfigurasi TypeScript untuk Electron (`electron/` & `shared/`).
-- `vite.config.ts` â€” Konfigurasi Vite bundler.
-- `index.html` â€” Entry HTML untuk Vite / Renderer.
-- `shared/types.ts` â€” Kontrak tipe data bersama antara Main & Renderer (`DTO`, `Entity`, `AppMode`, `DocType`, `TransferPayload`).
-- `electron/` â€” Backend Desktop (Node.js / Main Process):
-  - `main.ts` â€” Lifecycle `BrowserWindow`, inisialisasi DB, registrasi IPC handlers.
-  - `preload.ts` â€” `ContextBridge` mengekspos `window.api` ke Renderer secara aman.
-  - `db/database.ts` â€” Loader WASM `sql.js`, helper `queryAll`, `queryOne`, `execute`, dan `runTransaction`.
-  - `db/migrations.ts` â€” Pembuatan tabel, indeks, dan seeding data awal.
-  - `db/defaultTemplates.ts` â€” Template bawaan HTML/CSS untuk cetak dokumen PDF.
-  - `services/masterService.ts` â€” CRUD Barang, Customer, Supplier + Bulk Import CSV/JSON.
-  - `services/orderDeliveryService.ts` â€” CRUD PO/SO, Surat Jalan, kalkulasi stok & mutasi otomatis.
-  - `services/invoicePaymentService.ts` â€” CRUD Invoice, Pelunasan FIFO, update status Lunas/Cicil.
-  - `services/pdfBackupService.ts` â€” Render PDF (Chromium), kustomisasi template, Backup/Restore DB mentah (`.db`).
-  - `services/exportBackupService.ts` â€” Export arsip laporan terbaca manusia ke Excel multi-sheet (`.xlsx` via `xlsx`/SheetJS) dan `.csv` dengan filter rentang tanggal serta JOIN relasi partner & item barang.
-- `src/` â€” Frontend UI (React Renderer Process):
-  - `main.tsx` â€” Entry point ReactDOM.
-  - `index.css` â€” Konfigurasi Tailwind CSS.
-  - `App.tsx` â€” State global (`AppSettings`, `dataRevision`, `paymentPrefill`), navigasi halaman (`activePage`), filter mode divisi, dan handover data lintas halaman (`InvoicesPage` -> `PaymentsPage`).
-  - `types/window.d.ts` â€” Deklarasi tipe global `window.api`.
-  - `utils/format.ts` â€” Format Rupiah, tanggal ISO, generator nomor dokumen, parser CSV/JSON.
-  - `components/Sidebar.tsx` â€” Navigasi dinamis sesuai Mode Operasi (`mode_1_gudang` / `mode_2_finance` / `all`).
-  - `components/SearchableSelect.tsx` â€” Komponen dropdown searchable reusable untuk pemilihan Customer, Supplier, Barang, dan filter partner.
-  - `components/PaginationBar.tsx` â€” Komponen kontrol paginasi reusable (pilihan item per halaman 10/20/50/100, nomor halaman, Prev/Next).
-  - `components/PdfPreviewModal.tsx` â€” Modal pratinjau HTML dokumen & export ke file PDF.
-  - `pages/DashboardPage.tsx` â€” Ringkasan KPI, peringatan stok menipis (<= 5), aksi cepat.
-  - `pages/MasterDataPage.tsx` â€” Manajemen Barang, Customer, Supplier, download template CSV & Bulk Import.
-  - `pages/OrdersPage.tsx` â€” Pembuatan/Edit PO (`in`) & SO (`out`), cetak PDF, export JSON.
-  - `pages/DeliveryNotesPage.tsx` â€” Surat Jalan (`in`/`out`), tarik sisa item dari PO/SO, update stok.
-  - `pages/MutasiBarangPage.tsx` â€” Buku besar log pergerakan stok (read-only audit trail).
-  - `pages/InvoicesPage.tsx` â€” Tagihan Hutang (`in`) & Piutang (`out`), import JSON Gudang, filter partner & status, mode tampilan tabel vs grup per partner (layered list), multi-select pelunasan, dan paginasi.
-  - `pages/PaymentsPage.tsx` â€” Pelunasan otomatis FIFO, cicilan, edit manual baris, potongan bank, filter partner, paginasi, serta penerima `prefillDraft` dari halaman Invoices.
-  - `pages/BackupExportPage.tsx` â€” Pusat Backup & Export Data: memisahkan backup arsip terbaca manusia (`.xlsx` multi-sheet / `.csv` per file dengan filter tanggal & checklist 12 jenis dataset) dan backup/restore database sistem penuh (`.db`).
-  - `pages/SettingsTemplatesPage.tsx` â€” Profil perusahaan, switch mode, editor HTML/CSS PDF, Backup/Restore DB.
+- `AGENT_RULES.md` - Dokumen panduan arsitektur & aturan pengembangan ini.
+- `package.json` - Konfigurasi dependencies, scripts, dan `electron-builder`.
+- `tsconfig.json` - Konfigurasi TypeScript untuk Frontend (`src/`).
+- `tsconfig.electron.json` - Konfigurasi TypeScript untuk Electron (`electron/` & `shared/`).
+- `vite.config.ts` - Konfigurasi Vite bundler.
+- `index.html` - Entry HTML untuk Vite / Renderer.
+- `shared/types.ts` - Kontrak tipe data bersama antara Main & Renderer (`DTO`, `Entity`, `AppMode`, `DocType`, `TransferPayload`).
+- `electron/` - Backend Desktop (Node.js / Main Process):
+  - `main.ts` - Lifecycle `BrowserWindow`, inisialisasi DB, registrasi IPC handlers.
+  - `preload.ts` - `ContextBridge` mengekspos `window.api` ke Renderer secara aman.
+  - `db/database.ts` - Loader WASM `sql.js`, helper `queryAll`, `queryOne`, `execute`, dan `runTransaction`.
+  - `db/migrations.ts` - Pembuatan tabel, indeks, dan seeding data awal.
+  - `db/defaultTemplates.ts` - Template bawaan HTML/CSS untuk cetak dokumen PDF.
+  - `services/masterService.ts` - CRUD Barang, Customer, Supplier + Bulk Import CSV/JSON.
+  - `services/orderDeliveryService.ts` - CRUD PO/SO, Surat Jalan, Sample, kalkulasi stok, mutasi manual & otomatis, serta rebuild buku besar mutasi dari dokumen.
+  - `services/invoicePaymentService.ts` - CRUD Invoice, Pelunasan FIFO, update status Lunas/Cicil.
+  - `services/pdfBackupService.ts` - Render PDF (Chromium), kustomisasi template, Backup/Restore DB mentah (`.db`), serta sinkronisasi salinan otomatis ke folder pilihan user.
+  - `services/exportBackupService.ts` - Export arsip laporan terbaca manusia ke Excel multi-sheet (`.xlsx` via `xlsx`/SheetJS) dan `.csv` dengan filter rentang tanggal serta JOIN relasi partner & item barang.
+- `src/` - Frontend UI (React Renderer Process):
+  - `main.tsx` - Entry point ReactDOM.
+  - `index.css` - Konfigurasi Tailwind CSS.
+  - `App.tsx` - State global (`AppSettings`, `dataRevision`, `paymentPrefill`), navigasi halaman (`activePage`), filter mode divisi, dan handover data lintas halaman (`InvoicesPage` -> `PaymentsPage`).
+  - `types/window.d.ts` - Deklarasi tipe global `window.api`.
+  - `utils/format.ts` - Format Rupiah, tanggal ISO, generator nomor dokumen, parser CSV/JSON.
+  - `components/Sidebar.tsx` - Navigasi dinamis sesuai Mode Operasi (`mode_1_gudang` / `mode_2_finance` / `all`).
+  - `components/SearchableSelect.tsx` - Komponen dropdown searchable reusable untuk pemilihan Customer, Supplier, Barang, dan filter partner.
+  - `components/PaginationBar.tsx` - Komponen kontrol paginasi reusable (pilihan item per halaman 10/20/50/100, nomor halaman, Prev/Next).
+  - `components/PdfPreviewModal.tsx` - Modal pratinjau HTML dokumen & export ke file PDF.
+  - `pages/DashboardPage.tsx` - Ringkasan KPI, peringatan stok menipis (<= 5), aksi cepat.
+  - `pages/MasterDataPage.tsx` - Manajemen Barang, Customer, Supplier, download template CSV & Bulk Import.
+  - `pages/OrdersPage.tsx` - Pembuatan/Edit PO (`in`) & SO (`out`), cetak PDF, export JSON.
+  - `pages/DeliveryNotesPage.tsx` - Surat Jalan (`in`/`out`), tarik sisa item dari PO/SO, update stok.
+  - `pages/MutasiBarangPage.tsx` - Buku besar log pergerakan stok (otomatis dari SJ/Sample + CRUD mutasi manual + utilitas Rebuild Stok & Mutasi).
+  - `pages/InvoicesPage.tsx` - Tagihan Hutang (`in`) & Piutang (`out`), import JSON Gudang, filter partner & status, mode tampilan tabel vs grup per partner (layered list), multi-select pelunasan, dan paginasi.
+  - `pages/PaymentsPage.tsx` - Pelunasan otomatis FIFO, cicilan, edit manual baris, potongan bank, filter partner, paginasi, serta penerima `prefillDraft` dari halaman Invoices.
+  - `pages/BackupExportPage.tsx` - Pusat Backup & Export Data: memisahkan backup arsip terbaca manusia (`.xlsx` multi-sheet / `.csv` per file dengan filter tanggal & checklist 13 jenis dataset) dan backup/restore database sistem penuh (`.db`) beserta pengaturan folder salinan otomatis.
+  - `pages/SettingsTemplatesPage.tsx` - Profil perusahaan, switch mode, editor HTML/CSS PDF, Backup/Restore DB.
 
 > **Catatan Build Electron**: Karena `tsconfig.electron.json` mengompilasi folder `electron/` dan `shared/` dengan `rootDir: "."`, hasil kompilasi berada di `dist-electron/electron/main.js` (sesuai field `"main"` di `package.json`).
 
@@ -81,7 +81,7 @@ Aplikasi mendukung 3 mode yang dapat diubah melalui dropdown Sidebar atau halama
   - Parser menerima format JSON array/object maupun CSV dengan delimiter koma (`,`), titik koma (`;`), atau tab.
   - Proses simpan bersifat *upsert* berdasarkan kolom `kode` (update jika `kode` sudah ada, insert jika baru/kosong).
 
-### B. Alur Pembelian & Penjualan â€” Divisi Gudang (`orderDeliveryService.ts`)
+### B. Alur Pembelian & Penjualan - Divisi Gudang (`orderDeliveryService.ts`)
 1. **PO & SO (`orders` & `order_details`)**:
    - `type = 'in'` -> Purchase Order (Pembelian ke `supplier_id`).
    - `type = 'out'` -> Sales Order (Penjualan ke `cust_id`).
@@ -97,7 +97,7 @@ Aplikasi mendukung 3 mode yang dapat diubah melalui dropdown Sidebar atau halama
 3. **Transfer ke Finance**:
    - Dari halaman Orders atau Surat Jalan, user menekan **Export JSON** (`exportTransferJson`) untuk menghasilkan file `.json` berisi header dokumen, data partner, dan rincian item.
 
-### C. Alur Penagihan & Pelunasan FIFO â€” Divisi Finance (`invoicePaymentService.ts`)
+### C. Alur Penagihan & Pelunasan FIFO - Divisi Finance (`invoicePaymentService.ts`)
 1. **Invoice (`invoices` & `invoice_details`)**:
    - Dapat dibuat manual atau melalui tombol **Import JSON Gudang** (`importTransferJson`), yang otomatis mencocokkan `partner` dan `barang` berdasarkan `kode` atau `nama`.
    - `type = 'out'` -> Invoice Penjualan (Piutang Customer).
@@ -132,3 +132,27 @@ Aplikasi mendukung 3 mode yang dapat diubah melalui dropdown Sidebar atau halama
    - **Payments**: `'in'` = Uang Masuk (Pelunasan Piutang dari Customer), `'out'` = Uang Keluar (Pelunasan Hutang ke Supplier).
 4. **Migrasi Skema Aman**:
    - Jika menambah kolom/tabel baru di `electron/db/migrations.ts`, gunakan `CREATE TABLE IF NOT EXISTS` atau pengecekan `PRAGMA table_info(...)` sebelum `ALTER TABLE` agar database `.db` lama milik user tidak rusak saat aplikasi di-update.
+
+---
+
+## 6. Progress & Kondisi Saat Ini (Status Terakhir: 25 November 2026)
+
+Bagian ini mencatat status pengerjaan terakhir sebelum rilis OTA berikutnya agar sesi pengembangan selanjutnya dapat langsung melanjutkan tanpa kehilangan konteks:
+
+### A. Mutasi Barang Manual & Kronologis (`orderDeliveryService.ts`, `MutasiBarangPage.tsx`)
+- **Mutasi Manual (CRUD)**: Selain mutasi otomatis dari Surat Jalan (`delivery_note_id`) dan Tanda Terima Sampel (`sample_id`), user kini dapat menambah, mengedit, dan menghapus catatan mutasi manual (misal: `STOCK OPNAME`, `RETUR / KERUSAKAN`, `PENYESUAIAN GUDANG`, `PRODUKSI / REPACK`). Mutasi otomatis tetap terkunci dari halaman ini dan harus diubah melalui dokumen asalnya.
+- **Kalkulasi Saldo Berjalan (`recalculateBarangLedger`)**: Setiap perubahan mutasi (otomatis maupun manual, termasuk sisipan tanggal lama) menyusun ulang `stok_sebelum` dan `stok_sesudah` secara kronologis (`ORDER BY tgl ASC, id ASC`) berdasarkan `getBarangInitialBaseline(barangId)` dan menyinkronkan `barang.stock` akhir.
+
+### B. Fitur Rebuild Stok & Mutasi dari Dokumen (`rebuildMutasiAndStockFromDocuments`)
+- **Dua Mode Scope**:
+  1. `all` (**Rombak Total**): Mereset baseline stok seluruh barang ke `0`, menghapus log mutasi otomatis lama, lalu membangun ulang seluruh riwayat mutasi dari dokumen Surat Jalan (`delivery_notes`) dan Tanda Terima Sampel (`samples`) secara kronologis.
+  2. `from_date` (**Mulai Tanggal Tertentu s/d Sekarang**): Mempertahankan saldo dan mutasi sebelum `fromDate` sebagai baseline, lalu membangun ulang mutasi mulai `fromDate` hingga sekarang.
+- **Opsi Mutasi Manual (`keepManualMutasi`)**: User dapat memilih mempertahankan mutasi manual yang sudah ada agar ikut disisipkan ulang ke perhitungan saldo sesuai urutan tanggalnya, atau menghapus seluruh mutasi manual dalam rentang rebuild.
+- **Status Pengujian**: Implementasi & build sudah selesai, **namun akurasi hasil perhitungan rebuild pada data riil masih perlu diverifikasi menyeluruh sebelum rilis OTA**.
+
+### C. Sistem Dual-Backup Database SQLite (`.db`)
+- **Auto-Backup Sebelum Rebuild**: Sebelum `rebuildMutasiAndStockFromDocuments` berjalan, sistem memanggil `saveDatabase()` lalu membuat snapshot `.db` ke folder internal `userData/backups/auto_backup_before_rebuild_<timestamp>.db`.
+- **Folder Salinan Otomatis Opsional (`app_settings.custom_backup_dir`)**:
+  - User dapat memilih folder eksternal (misal folder sinkronisasi cloud/drive lokal) melalui halaman **Pusat Backup & Export Data** (`BackupExportPage.tsx`, via IPC `db:selectCustomBackupFolder` & `db:openLocation`).
+  - Setiap backup manual (`backupDatabase`) maupun auto-backup sebelum rebuild otomatis menyalin file `.db` ke folder pilihan tersebut melalui `copyBackupToCustomFolder()`.
+- **Status Pengujian & Rilis**: Fitur backup & restore `.db` sudah diuji dan terverifikasi aman. **Rilis OTA sengaja ditunda** hingga verifikasi hasil perhitungan Rebuild Stok & Mutasi selesai dilakukan.

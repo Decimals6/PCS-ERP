@@ -220,6 +220,20 @@ export interface MutasiBarangInput {
   keterangan?: string;
 }
 
+export interface RebuildMutasiOptions {
+  mode: 'all' | 'from_date';
+  fromDate?: string;
+  keepManualMutasi: boolean;
+}
+
+export interface RebuildMutasiResult {
+  backupPath: string;
+  customBackupPath?: string;
+  affectedBarangCount: number;
+  rebuiltAutoCount: number;
+  recalculatedManualCount: number;
+}
+
 // --- TRANSAKSI: SAMPLES ---
 export interface SampleBarang {
   id?: number;
@@ -294,6 +308,7 @@ export interface AppSettings {
   po_signer_name: string;
   po_signer_title: string;
   default_ppn: string;
+  custom_backup_dir?: string;
 }
 
 // --- INTER-DIVISION JSON TRANSFER ---

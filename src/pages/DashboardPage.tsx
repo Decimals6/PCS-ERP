@@ -47,7 +47,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ appMode, onNavigat
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Dashboard Operasional</h1>
         <p className="text-sm text-slate-500">
-          Ringkasan data lokal offline â€” mode aktif:{' '}
+          Ringkasan data lokal offline - mode aktif:{' '}
           <span className="font-semibold text-blue-600">
             {appMode === 'mode_1_gudang'
               ? 'Mode 1 (Order & Gudang)'
