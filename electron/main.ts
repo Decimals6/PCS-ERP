@@ -14,11 +14,16 @@ import { HumanBackupRequest, TransferDocumentPayload } from '../shared/types';
 let mainWindow: BrowserWindow | null = null;
 
 function createMainWindow(): void {
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, '../build/icon.ico')
+    : path.join(__dirname, '../../build/icon.ico');
+
   mainWindow = new BrowserWindow({
     width: 1340,
     height: 840,
     minWidth: 1080,
     minHeight: 680,
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
     title: 'PCS-ERP - Sistem Administrasi & Dokumen Offline',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
