@@ -15,6 +15,8 @@ import {
   RefreshCw,
   DownloadCloud,
   WifiOff,
+  ChevronDown,
+  History,
 } from 'lucide-react';
 import { APP_NAME, APP_RELEASES, APP_VERSION, ReleaseNoteItem } from '../data/changelog';
 import { UpdateCheckResult } from '../../shared/types';
@@ -42,6 +44,8 @@ const BADGE_STYLES: Record<
 
 export const DocsVersionPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'guide' | 'changelog'>('guide');
+  const [expandedVersions, setExpandedVersions] = useState<Record<string, boolean>>({});
+  const [showAllReleases, setShowAllReleases] = useState<boolean>(false);
   const [dbPath, setDbPath] = useState<string>('');
   const [installedVersion, setInstalledVersion] = useState<string>(APP_VERSION);
   const [checkingUpdate, setCheckingUpdate] = useState<boolean>(false);
@@ -105,6 +109,11 @@ export const DocsVersionPage: React.FC = () => {
   }, []);
 
   const currentRelease = APP_RELEASES.find((r) => r.isCurrent) || APP_RELEASES[0];
+  const olderReleases = APP_RELEASES.filter((r) => r.version !== currentRelease.version);
+
+  const toggleVersionExpand = (version: string) => {
+    setExpandedVersions((prev) => ({ ...prev, [version]: !prev[version] }));
+  };
 
   return (
     <div className="space-y-6">
@@ -375,50 +384,120 @@ export const DocsVersionPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Timeline Versi */}
+          {/* Versi Terbaru (Selalu Terbuka) */}
           <div className="space-y-4">
-            {APP_RELEASES.map((release) => (
-              <div
-                key={release.version}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="text-lg font-extrabold text-slate-900">v{release.version}</span>
-                    <span className="rounded-md bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
-                      {release.codename}
-                    </span>
-                    {release.isCurrent && (
-                      <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
-                        Versi Terpasang
+            <div className="rounded-2xl border-2 border-blue-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="text-lg font-extrabold text-slate-900">v{currentRelease.version}</span>
+                  <span className="rounded-md bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                    {currentRelease.codename}
+                  </span>
+                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+                    Versi Terbaru
+                  </span>
+                </div>
+                <div className="text-xs font-medium text-slate-500">
+                  Rilis: {currentRelease.date} &bull; DB Schema v{currentRelease.schemaVersion}
+                </div>
+              </div>
+
+              <p className="mt-3 text-sm text-slate-600">{currentRelease.summary}</p>
+
+              <ul className="mt-4 space-y-2.5">
+                {currentRelease.changes.map((item, idx) => {
+                  const badge = BADGE_STYLES[item.type];
+                  return (
+                    <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-700">
+                      <span
+                        className={`mt-0.5 inline-flex flex-shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}
+                      >
+                        {badge.icon}
+                        {badge.label}
                       </span>
-                    )}
+                      <span className="leading-relaxed">{item.text}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
+            {/* Riwayat Versi Sebelumnya (Collapsible Accordion) */}
+            {olderReleases.length > 0 && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                    <History className="h-4 w-4 text-slate-500" />
+                    <span>Riwayat Versi Sebelumnya ({olderReleases.length})</span>
                   </div>
-                  <div className="text-xs font-medium text-slate-500">
-                    Rilis: {release.date} &bull; DB Schema v{release.schemaVersion}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAllReleases((prev) => !prev)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+                  >
+                    <span>{showAllReleases ? 'Sembunyikan Riwayat' : 'Lihat Riwayat Versi'}</span>
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 transition-transform duration-200 ${showAllReleases ? 'rotate-180' : ''}`}
+                    />
+                  </button>
                 </div>
 
-                <p className="mt-3 text-sm text-slate-600">{release.summary}</p>
-
-                <ul className="mt-4 space-y-2.5">
-                  {release.changes.map((item, idx) => {
-                    const badge = BADGE_STYLES[item.type];
-                    return (
-                      <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-700">
-                        <span
-                          className={`mt-0.5 inline-flex flex-shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}
+                {showAllReleases && (
+                  <div className="mt-3 space-y-2.5">
+                    {olderReleases.map((release) => {
+                      const isOpen = !!expandedVersions[release.version];
+                      return (
+                        <div
+                          key={release.version}
+                          className="overflow-hidden rounded-xl border border-slate-200 bg-white"
                         >
-                          {badge.icon}
-                          {badge.label}
-                        </span>
-                        <span className="leading-relaxed">{item.text}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
+                          <button
+                            type="button"
+                            onClick={() => toggleVersionExpand(release.version)}
+                            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50"
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-sm font-extrabold text-slate-900">v{release.version}</span>
+                              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                                {release.codename}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                              <span>{release.date}</span>
+                              <ChevronDown
+                                className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                              />
+                            </div>
+                          </button>
+
+                          {isOpen && (
+                            <div className="border-t border-slate-100 px-4 py-3.5">
+                              <p className="text-xs text-slate-600">{release.summary}</p>
+                              <ul className="mt-3 space-y-2">
+                                {release.changes.map((item, idx) => {
+                                  const badge = BADGE_STYLES[item.type];
+                                  return (
+                                    <li key={idx} className="flex items-start gap-2 text-xs text-slate-700">
+                                      <span
+                                        className={`mt-0.5 inline-flex flex-shrink-0 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ${badge.className}`}
+                                      >
+                                        {badge.icon}
+                                        {badge.label}
+                                      </span>
+                                      <span className="leading-relaxed">{item.text}</span>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}

@@ -13,16 +13,31 @@ export interface AppRelease {
   changes: ReleaseNoteItem[];
 }
 
-export const APP_VERSION = '1.0.2';
+export const APP_VERSION = '1.0.3';
 export const APP_NAME = 'PCS-ERP';
 
 export const APP_RELEASES: AppRelease[] = [
+  {
+    version: '1.0.3',
+    date: '26 November 2026',
+    codename: 'Penyesuaian Template Print Dot Matrix',
+    schemaVersion: 10,
+    isCurrent: true,
+    summary:
+      'Penyesuaian template dan orientasi cetak untuk dokumen Dot Matrix (Surat Jalan & Faktur Penjualan) agar presisi di kertas continuous form.',
+    changes: [
+      {
+        type: 'improvement',
+        text: 'Penyesuaian: memperbaiki template hasil print untuk dot matrix.',
+      },
+    ],
+  },
   {
     version: '1.0.2',
     date: '25 November 2026',
     codename: 'Rebuild Stok, Mutasi Kronologis & Dual-Backup',
     schemaVersion: 7,
-    isCurrent: true,
+    isCurrent: false,
     summary:
       'Penambahan fitur Rebuild Stok & Mutasi otomatis dari dokumen, penyempurnaan perhitungan saldo berjalan kronologis pada Buku Besar Mutasi Barang, serta sistem Dual-Backup database SQLite.',
     changes: [

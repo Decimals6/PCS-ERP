@@ -297,30 +297,32 @@ table.items td { border: 1px solid #000000; padding: 6px 8px; font-size: 11.5px;
     doc_type: 'SJ_DOT',
     name: 'Surat Jalan (Dot Matrix)',
     css_content: `* { box-sizing: border-box; margin: 0; padding: 0; }
-@page { size: 9.5in 5.5in; margin: 3mm 4mm; }
-body { font-family: 'Courier New', Consolas, 'Liberation Mono', monospace; font-size: 11px; color: #000000; padding: 0; line-height: 1.32; }
+@page { size: A4 portrait; margin: 4mm 6mm; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 11.5px; font-weight: 600; color: #000000; padding: 0; line-height: 1.32; }
+.dot-half-sheet { width: 100%; max-height: 132mm; overflow: hidden; }
 .company-block { margin-bottom: 4px; }
-.company-block .company-name { text-transform: uppercase; }
+.company-block .company-name { font-weight: 700; text-transform: uppercase; }
 .company-block .company-addr { white-space: pre-line; text-transform: uppercase; }
 .doc-title { text-align: center; font-size: 13.5px; font-weight: 700; letter-spacing: 0.6px; margin: 2px 0 8px; text-transform: uppercase; }
 .meta-grid { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 8px; }
 .meta-left { width: 62%; }
 .meta-right { width: 34%; }
 .meta-table { width: 100%; border-collapse: collapse; }
-.meta-table td { padding: 1px 0; vertical-align: top; font-size: 11px; }
+.meta-table td { padding: 1px 0; vertical-align: top; font-size: 11.5px; font-weight: 600; }
 .meta-table td.lbl { width: 86px; }
 .meta-table td.sep { width: 14px; }
 .ship-label { margin-bottom: 1px; }
 .ship-addr { white-space: pre-line; text-transform: uppercase; margin-bottom: 10px; }
 table.items { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1.5px solid #000000; }
-table.items th { border: 1px solid #000000; padding: 3px 6px; font-weight: 400; font-size: 11px; text-align: center; vertical-align: middle; }
-table.items td { border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 4px 7px; font-size: 11px; vertical-align: top; }
+table.items th { border: 1px solid #000000; padding: 3px 6px; font-weight: 700; font-size: 11.5px; text-align: center; vertical-align: middle; }
+table.items td { border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 4px 7px; font-size: 11.5px; font-weight: 600; vertical-align: top; }
 table.items tr.spacer-row td { height: 64px; }
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 .signatures { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 8px; padding: 0 24px; }
 .sig-col { width: 170px; text-align: center; }`,
-    html_content: `<div class="company-block">
+    html_content: `<div class="dot-half-sheet">
+<div class="company-block">
   <div class="company-name">{{company_name}}</div>
   <div class="company-addr">{{company_address}}</div>
 </div>
@@ -363,6 +365,7 @@ table.items tr.spacer-row td { height: 64px; }
   <div class="sig-col">Hormat kami</div>
   <div class="sig-col">Driver</div>
   <div class="sig-col">Penerima</div>
+</div>
 </div>`
   },
   {
@@ -474,11 +477,12 @@ table.items td { border: 1px solid #000000; padding: 6px 8px; font-size: 11.5px;
     doc_type: 'INVOICE_DOT',
     name: 'Faktur Penjualan (Dot Matrix)',
     css_content: `* { box-sizing: border-box; margin: 0; padding: 0; }
-@page { size: 9.5in 5.5in; margin: 3mm 4mm; }
-body { font-family: 'Courier New', Consolas, 'Liberation Mono', monospace; font-size: 11px; color: #000000; padding: 0; line-height: 1.3; }
+@page { size: A4 portrait; margin: 4mm 6mm; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 11.5px; font-weight: 600; color: #000000; padding: 0; line-height: 1.3; }
+.dot-half-sheet { width: 100%; max-height: 132mm; overflow: hidden; }
 .top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 6px; }
 .company-block { width: 55%; }
-.company-block .company-name { text-transform: uppercase; }
+.company-block .company-name { font-weight: 700; text-transform: uppercase; }
 .company-block .company-addr { white-space: pre-line; text-transform: uppercase; }
 .customer-block { width: 40%; }
 .customer-block .cust-addr { white-space: pre-line; }
@@ -487,28 +491,29 @@ body { font-family: 'Courier New', Consolas, 'Liberation Mono', monospace; font-
 .meta-left { width: 55%; }
 .meta-right { width: 40%; }
 .meta-table { width: 100%; border-collapse: collapse; }
-.meta-table td { padding: 1px 0; vertical-align: top; font-size: 11px; }
+.meta-table td { padding: 1px 0; vertical-align: top; font-size: 11.5px; font-weight: 600; }
 .meta-table td.lbl-left { width: 88px; }
 .meta-table td.lbl-right { width: 126px; }
 .meta-table td.sep { width: 14px; }
 table.items { width: 100%; border-collapse: collapse; margin-bottom: 6px; border: 1.5px solid #000000; }
-table.items th { border: 1px solid #000000; padding: 3px 5px; font-weight: 400; font-size: 10.5px; text-align: center; vertical-align: middle; }
-table.items td { border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 4px 6px; font-size: 11px; vertical-align: top; }
+table.items th { border: 1px solid #000000; padding: 3px 5px; font-weight: 700; font-size: 11px; text-align: center; vertical-align: middle; }
+table.items td { border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 4px 6px; font-size: 11.5px; font-weight: 600; vertical-align: top; }
 table.items tr.spacer-row td { height: 42px; }
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 .totals-wrap { display: flex; justify-content: flex-end; margin-bottom: 6px; }
 .totals-table { width: 46%; border-collapse: collapse; }
-.totals-table td { padding: 1.5px 4px; font-size: 11px; }
-.terbilang-line { margin-bottom: 6px; font-size: 11px; }
+.totals-table td { padding: 1.5px 4px; font-size: 11.5px; font-weight: 600; }
+.terbilang-line { margin-bottom: 6px; font-size: 11.5px; font-weight: 600; }
 .bottom-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-top: 2px; }
 .bank-col { width: 48%; }
 .bank-table { border-collapse: collapse; margin-top: 1px; }
-.bank-table td { padding: 1px 0; font-size: 11px; vertical-align: top; }
+.bank-table td { padding: 1px 0; font-size: 11.5px; font-weight: 600; vertical-align: top; }
 .bank-table td.lbl { width: 68px; }
 .bank-table td.sep { width: 14px; }
 .sig-col { width: 23%; text-align: center; }`,
-    html_content: `<div class="top-row">
+    html_content: `<div class="dot-half-sheet">
+<div class="top-row">
   <div class="company-block">
     <div class="company-name">{{company_name}}</div>
     <div class="company-addr">{{company_address}}</div>
@@ -574,6 +579,7 @@ table.items tr.spacer-row td { height: 42px; }
   </div>
   <div class="sig-col">Penerima,</div>
   <div class="sig-col">Hormat kami,</div>
+</div>
 </div>`
   },
   {

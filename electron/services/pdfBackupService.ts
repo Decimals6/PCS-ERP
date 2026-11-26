@@ -518,9 +518,10 @@ export async function exportDocumentToPdf(
     const pdfBuffer = await printWin.webContents.printToPDF({
       printBackground: true,
       preferCSSPageSize: true,
-      pageSize: isDotMatrix ? { width: 9.5, height: 5.5 } : 'A4',
+      landscape: false,
+      pageSize: 'A4',
       margins: isDotMatrix
-        ? { top: 0.1, bottom: 0.1, left: 0.1, right: 0.1 }
+        ? { top: 0.16, bottom: 0.16, left: 0.24, right: 0.24 }
         : { top: 0.25, bottom: 0.25, left: 0.25, right: 0.25 },
     });
     fs.writeFileSync(filePath, pdfBuffer);
@@ -575,9 +576,10 @@ export async function printDocumentDirect(
     const pdfBuffer = await printWin.webContents.printToPDF({
       printBackground: true,
       preferCSSPageSize: true,
-      pageSize: isDotMatrix ? { width: 9.5, height: 5.5 } : 'A4',
+      landscape: false,
+      pageSize: 'A4',
       margins: isDotMatrix
-        ? { top: 0.1, bottom: 0.1, left: 0.1, right: 0.1 }
+        ? { top: 0.16, bottom: 0.16, left: 0.24, right: 0.24 }
         : { top: 0.25, bottom: 0.25, left: 0.25, right: 0.25 },
     });
 

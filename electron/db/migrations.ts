@@ -1,7 +1,7 @@
 import { getDb, queryOne, queryAll, execute, saveDatabase } from './database';
 import { DEFAULT_PDF_TEMPLATES } from './defaultTemplates';
 
-const LATEST_SCHEMA_VERSION = 7;
+const LATEST_SCHEMA_VERSION = 10;
 
 function addColumnIfNotExists(table: string, column: string, definition: string): void {
   const cols = queryAll<{ name: string }>(`PRAGMA table_info(${table})`);
@@ -43,6 +43,18 @@ export function runMigrations(): void {
 
   if (currentVersion < 7) {
     migrateToV7();
+  }
+
+  if (currentVersion < 8) {
+    migrateToV8();
+  }
+
+  if (currentVersion < 9) {
+    migrateToV9();
+  }
+
+  if (currentVersion < 10) {
+    migrateToV10();
   }
 
   if (currentVersion < LATEST_SCHEMA_VERSION) {
@@ -389,6 +401,48 @@ function migrateToV7(): void {
       execute(
         'INSERT INTO pdf_templates (doc_type, name, html_content, css_content, updated_at) VALUES (?, ?, ?, ?, ?)',
         [sampleSeed.doc_type, sampleSeed.name, sampleSeed.html_content, sampleSeed.css_content, now],
+        false
+      );
+    }
+  }
+}
+
+function migrateToV8(): void {
+  const now = new Date().toISOString();
+  for (const docType of ['SJ_DOT', 'INVOICE_DOT'] as const) {
+    const seed = DEFAULT_PDF_TEMPLATES.find((t) => t.doc_type === docType);
+    if (seed) {
+      execute(
+        'UPDATE pdf_templates SET name = ?, html_content = ?, css_content = ?, updated_at = ? WHERE doc_type = ?',
+        [seed.name, seed.html_content, seed.css_content, now, docType],
+        false
+      );
+    }
+  }
+}
+
+function migrateToV9(): void {
+  const now = new Date().toISOString();
+  for (const docType of ['SJ_DOT', 'INVOICE_DOT'] as const) {
+    const seed = DEFAULT_PDF_TEMPLATES.find((t) => t.doc_type === docType);
+    if (seed) {
+      execute(
+        'UPDATE pdf_templates SET name = ?, html_content = ?, css_content = ?, updated_at = ? WHERE doc_type = ?',
+        [seed.name, seed.html_content, seed.css_content, now, docType],
+        false
+      );
+    }
+  }
+}
+
+function migrateToV10(): void {
+  const now = new Date().toISOString();
+  for (const docType of ['SJ_DOT', 'INVOICE_DOT'] as const) {
+    const seed = DEFAULT_PDF_TEMPLATES.find((t) => t.doc_type === docType);
+    if (seed) {
+      execute(
+        'UPDATE pdf_templates SET name = ?, html_content = ?, css_content = ?, updated_at = ? WHERE doc_type = ?',
+        [seed.name, seed.html_content, seed.css_content, now, docType],
         false
       );
     }

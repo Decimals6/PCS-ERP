@@ -135,24 +135,22 @@ Aplikasi mendukung 3 mode yang dapat diubah melalui dropdown Sidebar atau halama
 
 ---
 
-## 6. Progress & Kondisi Saat Ini (Status Terakhir: 25 November 2026)
+## 6. Status Rilis & Arsitektur Mutasi Terkini (v1.0.2 - 25 November 2026)
 
-Bagian ini mencatat status pengerjaan terakhir sebelum rilis OTA berikutnya agar sesi pengembangan selanjutnya dapat langsung melanjutkan tanpa kehilangan konteks:
+Seluruh rangkaian fitur mutasi barang kronologis, rebuild buku besar stok, dan dual-backup telah diverifikasi konsistensi transaksinya serta resmi dirilis pada **v1.0.2** (Schema DB v7) melalui OTA:
 
-### A. Mutasi Barang Manual & Kronologis (`orderDeliveryService.ts`, `MutasiBarangPage.tsx`)
-- **Mutasi Manual (CRUD)**: Selain mutasi otomatis dari Surat Jalan (`delivery_note_id`) dan Tanda Terima Sampel (`sample_id`), user kini dapat menambah, mengedit, dan menghapus catatan mutasi manual (misal: `STOCK OPNAME`, `RETUR / KERUSAKAN`, `PENYESUAIAN GUDANG`, `PRODUKSI / REPACK`). Mutasi otomatis tetap terkunci dari halaman ini dan harus diubah melalui dokumen asalnya.
-- **Kalkulasi Saldo Berjalan (`recalculateBarangLedger`)**: Setiap perubahan mutasi (otomatis maupun manual, termasuk sisipan tanggal lama) menyusun ulang `stok_sebelum` dan `stok_sesudah` secara kronologis (`ORDER BY tgl ASC, id ASC`) berdasarkan `getBarangInitialBaseline(barangId)` dan menyinkronkan `barang.stock` akhir.
+### A. Mutasi Barang Manual & Saldo Berjalan Kronologis (`orderDeliveryService.ts`, `MutasiBarangPage.tsx`)
+- **Mutasi Manual (CRUD)**: Selain mutasi otomatis dari Surat Jalan (`delivery_note_id`) dan Tanda Terima Sampel (`sample_id`), user dapat menambah, mengedit, dan menghapus catatan mutasi manual (misal: `STOCK OPNAME`, `RETUR / KERUSAKAN`, `PENYESUAIAN GUDANG`, `PRODUKSI / REPACK`). Mutasi otomatis tetap terkunci dari halaman ini dan hanya dapat diubah melalui dokumen asalnya.
+- **Kalkulasi Saldo Berjalan (`recalculateBarangLedger`)**: Setiap perubahan mutasi (otomatis maupun manual, termasuk sisipan pada tanggal lampau) secara atomik menyusun ulang `stok_sebelum` dan `stok_sesudah` seluruh riwayat mutasi barang terkait berdasarkan urutan kronologis (`ORDER BY tgl ASC, id ASC`) dari titik `getBarangInitialBaseline(barangId)`, lalu menyinkronkan `barang.stock` akhir.
 
-### B. Fitur Rebuild Stok & Mutasi dari Dokumen (`rebuildMutasiAndStockFromDocuments`)
+### B. Utilitas Rebuild Stok & Mutasi dari Dokumen (`rebuildMutasiAndStockFromDocuments`)
 - **Dua Mode Scope**:
   1. `all` (**Rombak Total**): Mereset baseline stok seluruh barang ke `0`, menghapus log mutasi otomatis lama, lalu membangun ulang seluruh riwayat mutasi dari dokumen Surat Jalan (`delivery_notes`) dan Tanda Terima Sampel (`samples`) secara kronologis.
   2. `from_date` (**Mulai Tanggal Tertentu s/d Sekarang**): Mempertahankan saldo dan mutasi sebelum `fromDate` sebagai baseline, lalu membangun ulang mutasi mulai `fromDate` hingga sekarang.
-- **Opsi Mutasi Manual (`keepManualMutasi`)**: User dapat memilih mempertahankan mutasi manual yang sudah ada agar ikut disisipkan ulang ke perhitungan saldo sesuai urutan tanggalnya, atau menghapus seluruh mutasi manual dalam rentang rebuild.
-- **Status Pengujian**: Implementasi & build sudah selesai, **namun akurasi hasil perhitungan rebuild pada data riil masih perlu diverifikasi menyeluruh sebelum rilis OTA**.
+- **Opsi Mutasi Manual (`keepManualMutasi`)**: Mempertahankan mutasi manual yang sudah ada agar ikut disisipkan ulang ke perhitungan saldo sesuai urutan tanggalnya, atau menghapus seluruh mutasi manual dalam rentang rebuild.
 
 ### C. Sistem Dual-Backup Database SQLite (`.db`)
 - **Auto-Backup Sebelum Rebuild**: Sebelum `rebuildMutasiAndStockFromDocuments` berjalan, sistem memanggil `saveDatabase()` lalu membuat snapshot `.db` ke folder internal `userData/backups/auto_backup_before_rebuild_<timestamp>.db`.
 - **Folder Salinan Otomatis Opsional (`app_settings.custom_backup_dir`)**:
   - User dapat memilih folder eksternal (misal folder sinkronisasi cloud/drive lokal) melalui halaman **Pusat Backup & Export Data** (`BackupExportPage.tsx`, via IPC `db:selectCustomBackupFolder` & `db:openLocation`).
   - Setiap backup manual (`backupDatabase`) maupun auto-backup sebelum rebuild otomatis menyalin file `.db` ke folder pilihan tersebut melalui `copyBackupToCustomFolder()`.
-- **Status Pengujian & Rilis**: Fitur backup & restore `.db` sudah diuji dan terverifikasi aman. **Rilis OTA sengaja ditunda** hingga verifikasi hasil perhitungan Rebuild Stok & Mutasi selesai dilakukan.

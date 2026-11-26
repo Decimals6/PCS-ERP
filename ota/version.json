@@ -1,7 +1,7 @@
 {
-  "version": "1.0.2",
-  "releaseDate": "25 November 2026",
-  "notes": "Rebuild Stok, Mutasi Kronologis & Dual-Backup",
+  "version": "1.0.3",
+  "releaseDate": "26 November 2026",
+  "notes": "Penyesuaian Template Print",
   "bundleUrl": "https://raw.githubusercontent.com/Decimals6/PCS-ERP/main/ota/app-bundle.zip",
-  "sha256": "0ee4c679b21bde64f83058c7844e0da4dd10fdde09f0406d861063f3ed196e43"
+  "sha256": "6983008b4aafbdcaef6ade5da0f5de2f190a9054c86a3d681fcffdd21c0f5ed0"
 }
