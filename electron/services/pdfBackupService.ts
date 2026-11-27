@@ -430,6 +430,7 @@ export function buildDocumentHtml(docType: DocType, docId: number): { html: stri
       diskon: formatRupiah(inv.diskon),
       ppn: String(inv.ppn),
       ppn_nominal: formatRupiah(inv.ppn_nominal),
+      ppn_nominal_plain: formatPlainNumber(inv.ppn_nominal, 0),
       ongkir: formatRupiah(inv.ongkir),
       total: formatRupiah(inv.total),
       grand_total: formatRupiah(grandTotalVal),

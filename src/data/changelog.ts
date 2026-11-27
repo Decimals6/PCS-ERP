@@ -13,16 +13,35 @@ export interface AppRelease {
   changes: ReleaseNoteItem[];
 }
 
-export const APP_VERSION = '1.0.3';
+export const APP_VERSION = '1.0.4';
 export const APP_NAME = 'PCS-ERP';
 
 export const APP_RELEASES: AppRelease[] = [
+  {
+    version: '1.0.4',
+    date: '27 November 2026',
+    codename: 'PPN Dinamis pada Cetak Invoice Dot Matrix',
+    schemaVersion: 11,
+    isCurrent: true,
+    summary:
+      'Perbaikan minor pada template cetak Faktur Penjualan Dot Matrix (INVOICE_DOT) untuk menampilkan baris PPN dengan persentase dinamis sesuai masing-masing invoice.',
+    changes: [
+      {
+        type: 'improvement',
+        text: 'Menambahkan baris PPN {{ppn}}% beserta nominal pajaknya pada format cetak Invoice Dot Matrix agar mengikuti tarif PPN tiap dokumen invoice.',
+      },
+      {
+        type: 'database',
+        text: 'Migrasi skema database lokal SQLite v11 untuk memperbarui template bawaan INVOICE_DOT secara otomatis.',
+      },
+    ],
+  },
   {
     version: '1.0.3',
     date: '26 November 2026',
     codename: 'Penyesuaian Template Print Dot Matrix',
     schemaVersion: 10,
-    isCurrent: true,
+    isCurrent: false,
     summary:
       'Penyesuaian template dan orientasi cetak untuk dokumen Dot Matrix (Surat Jalan & Faktur Penjualan) agar presisi di kertas continuous form.',
     changes: [

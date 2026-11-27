@@ -194,6 +194,8 @@ export const SettingsTemplatesPage: React.FC<SettingsTemplatesPageProps> = ({
       .replace(/\{\{total\}\}/g, 'Rp 924.741')
       .replace(/\{\{total_plain\}\}/g, '924.741')
       .replace(/\{\{grand_total\}\}/g, 'Rp 924.741')
+      .replace(/\{\{grand_total_plain\}\}/g, '924.741')
+      .replace(/\{\{pembulatan\}\}/g, '0')
       .replace(/\{\{terbilang\}\}/g, 'Sembilan Ratus Dua Puluh Empat Ribu Tujuh Ratus Empat Puluh Satu Rupiah') +
     '\n</body>\n</html>';
 

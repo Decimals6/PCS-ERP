@@ -1,7 +1,7 @@
 {
-  "version": "1.0.3",
-  "releaseDate": "26 November 2026",
-  "notes": "Penyesuaian Template Print",
+  "version": "1.0.4",
+  "releaseDate": "27 November 2026",
+  "notes": "ppn dinamis",
   "bundleUrl": "https://raw.githubusercontent.com/Decimals6/PCS-ERP/main/ota/app-bundle.zip",
-  "sha256": "6983008b4aafbdcaef6ade5da0f5de2f190a9054c86a3d681fcffdd21c0f5ed0"
+  "sha256": "05b1223df18cdcedb330da29e52e7d552257b1f06a63baa12bb219727e4e2e28"
 }

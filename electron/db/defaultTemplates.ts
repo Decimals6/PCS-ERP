@@ -561,6 +561,7 @@ table.items tr.spacer-row td { height: 42px; }
 <div class="totals-wrap">
   <table class="totals-table">
     <tr><td>Dasar Pengenaan Pajak</td><td class="text-right">{{dpp_net}}</td></tr>
+    <tr><td>PPN {{ppn}}%</td><td class="text-right">{{ppn_nominal_plain}}</td></tr>
     <tr><td>Pembulatan</td><td class="text-right">{{pembulatan}}</td></tr>
     <tr><td>Grand Total</td><td class="text-right">{{grand_total_plain}}</td></tr>
   </table>

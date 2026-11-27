@@ -1,7 +1,7 @@
 import { getDb, queryOne, queryAll, execute, saveDatabase } from './database';
 import { DEFAULT_PDF_TEMPLATES } from './defaultTemplates';
 
-const LATEST_SCHEMA_VERSION = 10;
+const LATEST_SCHEMA_VERSION = 11;
 
 function addColumnIfNotExists(table: string, column: string, definition: string): void {
   const cols = queryAll<{ name: string }>(`PRAGMA table_info(${table})`);
@@ -55,6 +55,10 @@ export function runMigrations(): void {
 
   if (currentVersion < 10) {
     migrateToV10();
+  }
+
+  if (currentVersion < 11) {
+    migrateToV11();
   }
 
   if (currentVersion < LATEST_SCHEMA_VERSION) {
@@ -446,6 +450,18 @@ function migrateToV10(): void {
         false
       );
     }
+  }
+}
+
+function migrateToV11(): void {
+  const now = new Date().toISOString();
+  const seed = DEFAULT_PDF_TEMPLATES.find((t) => t.doc_type === 'INVOICE_DOT');
+  if (seed) {
+    execute(
+      'UPDATE pdf_templates SET name = ?, html_content = ?, css_content = ?, updated_at = ? WHERE doc_type = ?',
+      [seed.name, seed.html_content, seed.css_content, now, 'INVOICE_DOT'],
+      false
+    );
   }
 }
 
